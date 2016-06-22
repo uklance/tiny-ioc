@@ -44,8 +44,10 @@ public class ConstructorServiceBuilder<T> implements ServiceBuilder<T> {
 				params[i] = param;
 			}
 			return constructor.newInstance(params);
+		} catch (IocException e) {
+			throw e;
 		} catch (Exception e) {
-			throw new IocException(e, "Could not build service %s", context.getServiceId());
+			throw new IocException(e, "Error building service '%s'", context.getServiceId());
 		}
 	}
 

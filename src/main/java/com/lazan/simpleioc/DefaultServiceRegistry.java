@@ -46,7 +46,7 @@ public class DefaultServiceRegistry implements ServiceRegistry {
 				bindOptions = candidate;
 			} else {
 				if (!override.getServiceType().equals(serviceType)) {
-					throw new IocException("Invalid override for servieId '%s', expected %s found %s",
+					throw new IocException("Invalid override for serviceId '%s', expected %s found %s",
 							serviceId, serviceType.getName(), override.getServiceType().getName());
 				}
 				bindOptions = override;
