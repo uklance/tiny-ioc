@@ -51,7 +51,7 @@ public class ConstructorServiceBuilder<T> implements ServiceBuilder<T> {
 
 	protected <A extends Annotation> A find(Annotation[] anns, Class<A> type) {
 		for (Annotation ann : anns) {
-			if (type.equals(ann.getClass())) {
+			if (type.equals(ann.annotationType())) {
 				return type.cast(ann);
 			}
 		}
