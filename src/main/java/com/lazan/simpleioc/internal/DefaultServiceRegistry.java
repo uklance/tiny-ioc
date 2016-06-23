@@ -9,8 +9,6 @@ import java.util.Map;
 import java.util.Set;
 
 import com.lazan.simpleioc.IocException;
-import com.lazan.simpleioc.ServiceBindOptions;
-import com.lazan.simpleioc.ServiceBinder;
 import com.lazan.simpleioc.ServiceBuilder;
 import com.lazan.simpleioc.ServiceBuilderContext;
 import com.lazan.simpleioc.ServiceModule;
@@ -80,14 +78,6 @@ public class DefaultServiceRegistry implements ServiceRegistry {
 		this.serviceIdStack.add(serviceId);
 	}
 
-	protected String getServiceId(DefaultServiceBindOptions bindOptions) {
-		if (bindOptions.getServiceId() != null) {
-			return bindOptions.getServiceId();
-		}
-		String simpleName = bindOptions.getServiceType().getSimpleName();
-		return Character.toLowerCase(simpleName.charAt(0)) + simpleName.substring(1);
-	}
-	
 	@Override
 	public <T> T getService(Class<T> serviceType) {
 		List<ServicePointer> pointers = pointersByServiceType.get(serviceType);
@@ -127,103 +117,15 @@ public class DefaultServiceRegistry implements ServiceRegistry {
 		return pointersByServiceType.keySet();
 	}
 
-	public static class DefaultServiceBinder implements ServiceBinder {
-		private List<DefaultServiceBindOptions> bindList = new LinkedList<>();
-		private List<DefaultServiceBindOptions> overrideList = new LinkedList<>();
-		
-		@Override
-		public <T> ServiceBindOptions bind(Class<T> serviceType) {
-			return bind(serviceType, new ConstructorServiceBuilder<>(serviceType));
+	protected String getServiceId(DefaultServiceBindOptions bindOptions) {
+		if (bindOptions.getServiceId() != null) {
+			return bindOptions.getServiceId();
 		}
-		
-		@Override
-		public <T> ServiceBindOptions bind(Class<T> serviceType, T service) {
-			return bind(serviceType, new ConstantServiceBuilder<T>(service));
-		}
-		
-		@Override
-		public <T, C extends T> ServiceBindOptions bind(Class<T> serviceType, Class<C> concreteType) {
-			return bind(serviceType, new ConstructorServiceBuilder<C>(concreteType));
-		}
-		
-		@Override
-		public <T, C extends T> ServiceBindOptions bind(Class<T> serviceType, ServiceBuilder<C> builder) {
-			DefaultServiceBindOptions bindOptions = new DefaultServiceBindOptions(serviceType, builder);
-			bindList.add(bindOptions);
-			return bindOptions;
-		}
-		
-		@Override
-		public <T, C extends T> ServiceBindOptions override(Class<T> serviceType, Class<C> concreteType) {
-			return override(serviceType, new ConstructorServiceBuilder<C>(concreteType));
-		}
-		
-		@Override
-		public <T> ServiceBindOptions override(Class<T> serviceType, T service) {
-			return override(serviceType, new ConstantServiceBuilder<T>(service));
-		}
-		
-		@Override
-		public <T, C extends T> ServiceBindOptions override(Class<T> serviceType, ServiceBuilder<C> builder) {
-			DefaultServiceBindOptions bindOptions = new DefaultServiceBindOptions(serviceType, builder);
-			overrideList.add(bindOptions);
-			return bindOptions;
-		}
-		
-		public List<DefaultServiceBindOptions> getBindList() {
-			return bindList;
-		}
-		
-		public List<DefaultServiceBindOptions> getOverrideList() {
-			return overrideList;
-		}
+		String simpleName = bindOptions.getServiceType().getSimpleName();
+		return Character.toLowerCase(simpleName.charAt(0)) + simpleName.substring(1);
 	}
 	
-	public static class DefaultServiceBindOptions implements ServiceBindOptions {
-		private final Class<?> serviceType;
-		private final ServiceBuilder<?> builder;
-		private String serviceId;
-		
-		public DefaultServiceBindOptions(Class<?> serviceType, ServiceBuilder<?> builder) {
-			super();
-			this.serviceType = serviceType;
-			this.builder = builder;
-		}
-
-		@Override
-		public ServiceBindOptions withServiceId(String serviceId) {
-			this.serviceId = serviceId;
-			return this;
-		}
-		
-		public String getServiceId() {
-			return serviceId;
-		}
-		
-		public Class<?> getServiceType() {
-			return serviceType;
-		}
-		
-		public ServiceBuilder<?> getServiceBuilder() {
-			return builder;
-		}
-	}
-	
-	public static class ConstantServiceBuilder<T> implements ServiceBuilder<T> {
-		private final T service;
-		
-		public ConstantServiceBuilder(T service) {
-			super();
-			this.service = service;
-		}
-
-		@Override
-		public T build(ServiceBuilderContext context) {
-			return service;
-		}
-	}
-	
-	public class ServicePointer {
+	protected static class ServicePointer {
 		private final String serviceId;
 		private final ServiceBuilder<?> builder;
 		private volatile Object service;
@@ -249,7 +151,7 @@ public class DefaultServiceRegistry implements ServiceRegistry {
 		}
 	}
 	
-	public class DefaultServiceBuilderContext implements ServiceBuilderContext {
+	protected static class DefaultServiceBuilderContext implements ServiceBuilderContext {
 		private final String serviceId;
 		private final ServiceRegistry registry;
 		public DefaultServiceBuilderContext(String serviceId, ServiceRegistry registry) {
