@@ -115,6 +115,31 @@ public class ServiceRegistryTest {
 		} catch (IocException e) {
 			assertEquals("Circular dependency reference detected [circular1, circular2, circular3, circular1]", e.getMessage());
 		}
+		
+		ServiceModule module2 = new ServiceModule() {
+			@Override
+			public void bind(ServiceBinder binder) {
+				binder.bind(String.class, "foo").withServiceId("string1");
+			}
+		};
+		ServiceModule module3 = new ServiceModule() {
+			@Override
+			public void bind(ServiceBinder binder) {
+				binder.override(String.class, "foo-override").withServiceId("string1");
+			}
+		};
+		try {
+			buildRegistry(module2, module2);
+			fail();
+		} catch (IocException e) {
+			assertEquals("Duplicate serviceId 'string1'", e.getMessage());
+		}
+		try {
+			buildRegistry(module2, module3, module3);
+			fail();
+		} catch (IocException e) {
+			assertEquals("Duplicate override for serviceId 'string1'", e.getMessage());
+		}
 	}
 
 	private ServiceRegistry buildRegistry(ServiceModule... modules) {
