@@ -2,6 +2,9 @@ package com.lazan.simpleioc;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
+import static org.junit.Assert.fail;
+
+import java.util.Arrays;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -80,5 +83,41 @@ public class ServiceRegistryTest {
 		NamedStrings ns = registry.getService(NamedStrings.class);
 		assertEquals("hello", ns.string1);
 		assertEquals("world", ns.string2);
+	}
+	
+	static class Circular1 {
+		public Circular1(Circular2 c2) {
+		}
+	}
+	static class Circular2 {
+		public Circular2(Circular3 c3) {
+		}
+	}
+	static class Circular3 {
+		public Circular3(Circular1 c1) {
+		}
+	}
+	
+	@Test
+	public void testExceptions() {
+		ServiceModule module1 = new ServiceModule() {
+			@Override
+			public void bind(ServiceBinder binder) {
+				binder.bind(Circular1.class);
+				binder.bind(Circular2.class);
+				binder.bind(Circular3.class);
+			}
+		};
+		try {
+			ServiceRegistry registry = buildRegistry(module1);
+			registry.getService(Circular1.class);
+			fail();
+		} catch (IocException e) {
+			assertEquals("Circular dependency reference detected [circular1, circular2, circular3, circular1]", e.getMessage());
+		}
+	}
+
+	private ServiceRegistry buildRegistry(ServiceModule... modules) {
+		return new ServiceRegistryBuilder().withModules(Arrays.asList(modules)).build();
 	}
 }
