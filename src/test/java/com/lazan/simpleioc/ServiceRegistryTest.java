@@ -8,7 +8,7 @@ import javax.inject.Named;
 
 import org.junit.Test;
 
-public class DefaultServiceRegistryTest {
+public class ServiceRegistryTest {
 	public static class Child {}
 
 	public static class Parent {
@@ -48,7 +48,7 @@ public class DefaultServiceRegistryTest {
 	
 	@Test
 	public void testInject() {
-		ServiceModule module1 = new ServiceModule() {
+		ServiceModule module = new ServiceModule() {
 			@Override
 			public void bind(ServiceBinder binder) {
 				binder.bind(GrandParent.class);
@@ -56,7 +56,7 @@ public class DefaultServiceRegistryTest {
 				binder.bind(Child.class);
 			}
 		};
-		ServiceRegistry registry = new DefaultServiceRegistry(module1);
+		ServiceRegistry registry = new ServiceRegistryBuilder().withModule(module).build();
 		GrandParent grandParent = registry.getService(GrandParent.class);
 		Parent parent = registry.getService(Parent.class);
 		Child child = registry.getService(Child.class);
@@ -76,7 +76,7 @@ public class DefaultServiceRegistryTest {
 				binder.bind(String.class, "world").withServiceId("string2");
 			}
 		};
-		ServiceRegistry registry = new DefaultServiceRegistry(module);
+		ServiceRegistry registry = new ServiceRegistryBuilder().withModule(module).build();
 		NamedStrings ns = registry.getService(NamedStrings.class);
 		assertEquals("hello", ns.string1);
 		assertEquals("world", ns.string2);

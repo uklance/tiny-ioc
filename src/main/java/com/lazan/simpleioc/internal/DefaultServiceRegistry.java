@@ -1,4 +1,4 @@
-package com.lazan.simpleioc;
+package com.lazan.simpleioc.internal;
 
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -8,14 +8,20 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.lazan.simpleioc.internal.ConstructorServiceBuilder;
+import com.lazan.simpleioc.IocException;
+import com.lazan.simpleioc.ServiceBindOptions;
+import com.lazan.simpleioc.ServiceBinder;
+import com.lazan.simpleioc.ServiceBuilder;
+import com.lazan.simpleioc.ServiceBuilderContext;
+import com.lazan.simpleioc.ServiceModule;
+import com.lazan.simpleioc.ServiceRegistry;
 
 public class DefaultServiceRegistry implements ServiceRegistry {
 	private final Set<String> serviceIdStack;
 	private final Map<String, ServicePointer> pointersByServiceId;
 	private final Map<Class<?>, List<ServicePointer>> pointersByServiceType;
 	
-	public DefaultServiceRegistry(ServiceModule... modules) {
+	public DefaultServiceRegistry(Iterable<ServiceModule> modules) {
 		Map<String, ServicePointer> _pointersByServiceId = new LinkedHashMap<>();
 		Map<Class<?>, List<ServicePointer>> _pointersByServiceType = new LinkedHashMap<>();
 		
