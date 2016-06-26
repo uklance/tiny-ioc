@@ -66,6 +66,12 @@ public class DefaultServiceRegistry implements ServiceRegistry {
 			pointerList.add(servicePointer);
 		}
 		
+		for (String serviceId : overrideMap.keySet()) {
+			if (!_pointersByServiceId.containsKey(serviceId)) {
+				throw new IocException("Attempted to override unknown service Id '%s'", serviceId);
+			}
+		}
+		
 		serviceIdStack = Collections.emptySet();
 		pointersByServiceId = Collections.unmodifiableMap(_pointersByServiceId);
 		pointersByServiceType = Collections.unmodifiableMap(_pointersByServiceType);

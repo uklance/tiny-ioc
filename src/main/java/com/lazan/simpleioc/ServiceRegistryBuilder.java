@@ -20,6 +20,13 @@ public class ServiceRegistryBuilder {
 		return this;
 	}
 	
+	public ServiceRegistryBuilder withModules(ServiceModule... modules) {
+		for (ServiceModule module : modules) {
+			this.modules.add(module);
+		}
+		return this;
+	}
+	
 	public ServiceRegistry build() {
 		return new DefaultServiceRegistry(modules);
 	}

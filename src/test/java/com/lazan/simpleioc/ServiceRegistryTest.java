@@ -4,8 +4,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.fail;
 
-import java.util.Arrays;
-
 import javax.inject.Inject;
 import javax.inject.Named;
 
@@ -85,6 +83,25 @@ public class ServiceRegistryTest {
 		assertEquals("world", ns.string2);
 	}
 	
+	@Test
+	public void testOverride() {
+		ServiceModule module1 = new ServiceModule() {
+			@Override
+			public void bind(ServiceBinder binder) {
+				binder.bind(String.class, "foo").withServiceId("string1");
+			}
+		};
+		ServiceModule module2 = new ServiceModule() {
+			@Override
+			public void bind(ServiceBinder binder) {
+				binder.override(String.class, "foo-override").withServiceId("string1");
+			}
+		};
+		ServiceRegistry registry = buildRegistry(module1, module2);
+		assertEquals("foo-override", registry.getService("string1"));
+		
+	}
+	
 	static class Circular1 {
 		public Circular1(Circular2 c2) {
 		}
@@ -140,9 +157,15 @@ public class ServiceRegistryTest {
 		} catch (IocException e) {
 			assertEquals("Duplicate override for serviceId 'string1'", e.getMessage());
 		}
+		try {
+			buildRegistry(module3);
+			fail();
+		} catch (IocException e) {
+			assertEquals("Attempted to override unknown service Id 'string1'", e.getMessage());
+		}
 	}
 
 	private ServiceRegistry buildRegistry(ServiceModule... modules) {
-		return new ServiceRegistryBuilder().withModules(Arrays.asList(modules)).build();
+		return new ServiceRegistryBuilder().withModules(modules).build();
 	}
 }
