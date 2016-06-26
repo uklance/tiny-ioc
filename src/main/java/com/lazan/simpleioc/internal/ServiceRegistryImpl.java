@@ -9,7 +9,6 @@ import java.util.Map;
 import java.util.Set;
 
 import com.lazan.simpleioc.IocException;
-import com.lazan.simpleioc.ServiceBuilder;
 import com.lazan.simpleioc.ServiceBuilderContext;
 import com.lazan.simpleioc.ServiceModule;
 import com.lazan.simpleioc.ServiceRegistry;
@@ -55,9 +54,10 @@ public class ServiceRegistryImpl implements ServiceRegistry {
 				}
 				bindOptions = override;
 			}
-			ServicePointer servicePointer = new ServicePointer(serviceId, bindOptions.getServiceBuilder());
 			
+			ServicePointer servicePointer = new ServicePointer(serviceId, serviceType, bindOptions.getServiceBuilder());
 			_pointersByServiceId.put(serviceId, servicePointer);
+
 			List<ServicePointer> pointerList = _pointersByServiceType.get(serviceType);
 			if (pointerList == null) {
 				pointerList = new LinkedList<>();
@@ -80,8 +80,10 @@ public class ServiceRegistryImpl implements ServiceRegistry {
 	protected ServiceRegistryImpl(ServiceRegistryImpl registry, String serviceId) {
 		this.pointersByServiceId = registry.pointersByServiceId;
 		this.pointersByServiceType = registry.pointersByServiceType;
-		this.serviceIdStack = new LinkedHashSet<>(registry.serviceIdStack);
-		this.serviceIdStack.add(serviceId);
+		
+		Set<String> _serviceIdStack = new LinkedHashSet<>(registry.serviceIdStack);
+		_serviceIdStack.add(serviceId);
+		this.serviceIdStack = Collections.unmodifiableSet(_serviceIdStack);
 	}
 
 	@Override
@@ -114,6 +116,17 @@ public class ServiceRegistryImpl implements ServiceRegistry {
 	}
 	
 	@Override
+	public <T> Map<String, T> getServices(Class<T> serviceType) {
+		Map<String, T> services = new LinkedHashMap<>();
+		List<ServicePointer> pointers = pointersByServiceType.get(serviceType);
+		for (ServicePointer pointer : pointers) {
+			T service = serviceType.cast(pointer.get(this));
+			services.put(pointer.getServiceId(), service);
+		}
+		return Collections.unmodifiableMap(services);
+	}
+	
+	@Override
 	public Set<String> getServiceIds() {
 		return pointersByServiceId.keySet();
 	}
@@ -121,6 +134,10 @@ public class ServiceRegistryImpl implements ServiceRegistry {
 	@Override
 	public Set<Class<?>> getServiceTypes() {
 		return pointersByServiceType.keySet();
+	}
+	
+	public Set<String> getServiceIdStack() {
+		return serviceIdStack;
 	}
 
 	protected String getServiceId(ServiceBindOptionsImpl bindOptions) {
@@ -131,45 +148,31 @@ public class ServiceRegistryImpl implements ServiceRegistry {
 		return Character.toLowerCase(simpleName.charAt(0)) + simpleName.substring(1);
 	}
 	
-	protected static class ServicePointer {
+	protected static class ServiceBuilderContextImpl implements ServiceBuilderContext {
+		private final ServiceRegistry registry;
 		private final String serviceId;
-		private final ServiceBuilder<?> builder;
-		private volatile Object service;
+		private final Class<?> serviceType;
 		
-		public ServicePointer(String serviceId, ServiceBuilder<?> builder) {
+		public ServiceBuilderContextImpl(ServiceRegistry registry, String serviceId, Class<?> serviceType) {
 			super();
+			this.registry = registry;
 			this.serviceId = serviceId;
-			this.builder = builder;
+			this.serviceType = serviceType;
 		}
 
-		public synchronized Object get(ServiceRegistryImpl registry) {
-			if (service == null) {
-				if (registry.serviceIdStack.contains(serviceId)) {
-					List<String> references = new LinkedList<>(registry.serviceIdStack);
-					references.add(serviceId);
-					throw new IocException("Circular dependency reference detected %s", references);
-				}
-				ServiceRegistryImpl registryWrapper = new ServiceRegistryImpl(registry, serviceId);
-				ServiceBuilderContext context = new ServiceBuilderContextImpl(serviceId, registryWrapper);
-				service = builder.build(context);
-			}
-			return service;
-		}
-	}
-	
-	protected static class ServiceBuilderContextImpl implements ServiceBuilderContext {
-		private final String serviceId;
-		private final ServiceRegistry registry;
-		public ServiceBuilderContextImpl(String serviceId, ServiceRegistry registry) {
-			super();
-			this.serviceId = serviceId;
-			this.registry = registry;
-		}
+		@Override
 		public String getServiceId() {
 			return serviceId;
 		}
+		
+		@Override
 		public ServiceRegistry getServiceRegistry() {
 			return registry;
+		}
+		
+		@Override
+		public Class<?> getServiceType() {
+			return serviceType;
 		}
 	}
 }

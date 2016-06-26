@@ -1,5 +1,6 @@
 package com.lazan.simpleioc;
 
+import java.util.Map;
 import java.util.Set;
 
 public interface ServiceRegistry {
@@ -8,4 +9,5 @@ public interface ServiceRegistry {
 	<T> T getService(Class<T> serviceType);
 	Object getService(String serviceId);
 	<T> T getService(String serviceId, Class<T> serviceType);
+	<T> Map<String, T> getServices(Class<T> serviceType);
 }
