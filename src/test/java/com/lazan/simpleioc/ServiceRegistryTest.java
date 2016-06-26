@@ -5,7 +5,6 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.fail;
 
 import java.io.BufferedReader;
-import java.io.IOError;
 import java.io.Reader;
 import java.io.StringReader;
 
@@ -166,7 +165,7 @@ public class ServiceRegistryTest {
 			buildRegistry(module3);
 			fail();
 		} catch (IocException e) {
-			assertEquals("Attempted to override unknown service Id 'string1'", e.getMessage());
+			assertEquals("Attempted to override unknown serviceId 'string1'", e.getMessage());
 		}
 	}
 	
@@ -226,7 +225,18 @@ public class ServiceRegistryTest {
 		} catch (IocException e) {
 			assertEquals("Conflicting decorators registered for serviceId 'reader' and serviceType 'java.io.Reader'", e.getMessage());
 		}
-		
+		try {
+			buildRegistry(module2).getService(Reader.class);
+			fail();
+		} catch (IocException e) {
+			assertEquals("Attempted to decorate unknown serviceType 'java.io.Reader'", e.getMessage());
+		}
+		try {
+			buildRegistry(module3).getService(Reader.class);
+			fail();
+		} catch (IocException e) {
+			assertEquals("Attempted to decorate unknown serviceId 'reader'", e.getMessage());
+		}
 	}
 
 	private ServiceRegistry buildRegistry(ServiceModule... modules) {

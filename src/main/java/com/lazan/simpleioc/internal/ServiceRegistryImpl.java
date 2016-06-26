@@ -77,7 +77,17 @@ public class ServiceRegistryImpl implements ServiceRegistry {
 		
 		for (String serviceId : overrideMap.keySet()) {
 			if (!_pointersByServiceId.containsKey(serviceId)) {
-				throw new IocException("Attempted to override unknown service Id '%s'", serviceId);
+				throw new IocException("Attempted to override unknown serviceId '%s'", serviceId);
+			}
+		}
+		for (String serviceId : binder.getDecoratorsByServiceId().keySet()) {
+			if (!_pointersByServiceId.containsKey(serviceId)) {
+				throw new IocException("Attempted to decorate unknown serviceId '%s'", serviceId);
+			}
+		}
+		for (Class<?> serviceType : binder.getDecoratorsByServiceType().keySet()) {
+			if (!_pointersByServiceType.containsKey(serviceType)) {
+				throw new IocException("Attempted to decorate unknown serviceType '%s'", serviceType.getName());
 			}
 		}
 		
