@@ -3,12 +3,12 @@ package com.lazan.simpleioc.internal;
 import com.lazan.simpleioc.ServiceBindOptions;
 import com.lazan.simpleioc.ServiceBuilder;
 
-public class DefaultServiceBindOptions implements ServiceBindOptions {
+public class ServiceBindOptionsImpl implements ServiceBindOptions {
 	private final Class<?> serviceType;
 	private final ServiceBuilder<?> builder;
 	private String serviceId;
 	
-	public DefaultServiceBindOptions(Class<?> serviceType, ServiceBuilder<?> builder) {
+	public ServiceBindOptionsImpl(Class<?> serviceType, ServiceBuilder<?> builder) {
 		super();
 		this.serviceType = serviceType;
 		this.builder = builder;

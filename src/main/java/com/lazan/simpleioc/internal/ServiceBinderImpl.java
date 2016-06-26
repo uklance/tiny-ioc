@@ -7,9 +7,9 @@ import com.lazan.simpleioc.ServiceBindOptions;
 import com.lazan.simpleioc.ServiceBinder;
 import com.lazan.simpleioc.ServiceBuilder;
 
-public class DefaultServiceBinder implements ServiceBinder {
-	private List<DefaultServiceBindOptions> bindList = new LinkedList<>();
-	private List<DefaultServiceBindOptions> overrideList = new LinkedList<>();
+public class ServiceBinderImpl implements ServiceBinder {
+	private List<ServiceBindOptionsImpl> bindList = new LinkedList<>();
+	private List<ServiceBindOptionsImpl> overrideList = new LinkedList<>();
 	
 	@Override
 	public <T> ServiceBindOptions bind(Class<T> serviceType) {
@@ -28,7 +28,7 @@ public class DefaultServiceBinder implements ServiceBinder {
 	
 	@Override
 	public <T, C extends T> ServiceBindOptions bind(Class<T> serviceType, ServiceBuilder<C> builder) {
-		DefaultServiceBindOptions bindOptions = new DefaultServiceBindOptions(serviceType, builder);
+		ServiceBindOptionsImpl bindOptions = new ServiceBindOptionsImpl(serviceType, builder);
 		bindList.add(bindOptions);
 		return bindOptions;
 	}
@@ -45,16 +45,16 @@ public class DefaultServiceBinder implements ServiceBinder {
 	
 	@Override
 	public <T, C extends T> ServiceBindOptions override(Class<T> serviceType, ServiceBuilder<C> builder) {
-		DefaultServiceBindOptions bindOptions = new DefaultServiceBindOptions(serviceType, builder);
+		ServiceBindOptionsImpl bindOptions = new ServiceBindOptionsImpl(serviceType, builder);
 		overrideList.add(bindOptions);
 		return bindOptions;
 	}
 	
-	public List<DefaultServiceBindOptions> getBindList() {
+	public List<ServiceBindOptionsImpl> getBindList() {
 		return bindList;
 	}
 	
-	public List<DefaultServiceBindOptions> getOverrideList() {
+	public List<ServiceBindOptionsImpl> getOverrideList() {
 		return overrideList;
 	}
 }

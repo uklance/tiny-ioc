@@ -14,38 +14,38 @@ import com.lazan.simpleioc.ServiceBuilderContext;
 import com.lazan.simpleioc.ServiceModule;
 import com.lazan.simpleioc.ServiceRegistry;
 
-public class DefaultServiceRegistry implements ServiceRegistry {
+public class ServiceRegistryImpl implements ServiceRegistry {
 	private final Set<String> serviceIdStack;
 	private final Map<String, ServicePointer> pointersByServiceId;
 	private final Map<Class<?>, List<ServicePointer>> pointersByServiceType;
 	
-	public DefaultServiceRegistry(Iterable<ServiceModule> modules) {
+	public ServiceRegistryImpl(Iterable<ServiceModule> modules) {
 		Map<String, ServicePointer> _pointersByServiceId = new LinkedHashMap<>();
 		Map<Class<?>, List<ServicePointer>> _pointersByServiceType = new LinkedHashMap<>();
 		
-		DefaultServiceBinder binder = new DefaultServiceBinder();
+		ServiceBinderImpl binder = new ServiceBinderImpl();
 		
 		for (ServiceModule module : modules) {
 			module.bind(binder);
 		}
 		
-		Map<String, DefaultServiceBindOptions> overrideMap = new LinkedHashMap<>();
-		for (DefaultServiceBindOptions override : binder.getOverrideList()) {
+		Map<String, ServiceBindOptionsImpl> overrideMap = new LinkedHashMap<>();
+		for (ServiceBindOptionsImpl override : binder.getOverrideList()) {
 			String serviceId = getServiceId(override);
 			if (overrideMap.containsKey(serviceId)) {
 				throw new IocException("Duplicate override for serviceId '%s'", serviceId);
 			}
 			overrideMap.put(serviceId, override);
 		}
-		for (DefaultServiceBindOptions candidate : binder.getBindList()) {
+		for (ServiceBindOptionsImpl candidate : binder.getBindList()) {
 			String serviceId = getServiceId(candidate);
 			Class<?> serviceType = candidate.getServiceType();
 			if (_pointersByServiceId.containsKey(serviceId)) {
 				throw new IocException("Duplicate serviceId '%s'", serviceId);
 			}
-			DefaultServiceBindOptions override = overrideMap.get(serviceId);
+			ServiceBindOptionsImpl override = overrideMap.get(serviceId);
 			
-			DefaultServiceBindOptions bindOptions;
+			ServiceBindOptionsImpl bindOptions;
 			if (override == null) {
 				bindOptions = candidate;
 			} else {
@@ -77,7 +77,7 @@ public class DefaultServiceRegistry implements ServiceRegistry {
 		pointersByServiceType = Collections.unmodifiableMap(_pointersByServiceType);
 	}
 
-	protected DefaultServiceRegistry(DefaultServiceRegistry registry, String serviceId) {
+	protected ServiceRegistryImpl(ServiceRegistryImpl registry, String serviceId) {
 		this.pointersByServiceId = registry.pointersByServiceId;
 		this.pointersByServiceType = registry.pointersByServiceType;
 		this.serviceIdStack = new LinkedHashSet<>(registry.serviceIdStack);
@@ -123,7 +123,7 @@ public class DefaultServiceRegistry implements ServiceRegistry {
 		return pointersByServiceType.keySet();
 	}
 
-	protected String getServiceId(DefaultServiceBindOptions bindOptions) {
+	protected String getServiceId(ServiceBindOptionsImpl bindOptions) {
 		if (bindOptions.getServiceId() != null) {
 			return bindOptions.getServiceId();
 		}
@@ -142,25 +142,25 @@ public class DefaultServiceRegistry implements ServiceRegistry {
 			this.builder = builder;
 		}
 
-		public synchronized Object get(DefaultServiceRegistry registry) {
+		public synchronized Object get(ServiceRegistryImpl registry) {
 			if (service == null) {
 				if (registry.serviceIdStack.contains(serviceId)) {
 					List<String> references = new LinkedList<>(registry.serviceIdStack);
 					references.add(serviceId);
 					throw new IocException("Circular dependency reference detected %s", references);
 				}
-				DefaultServiceRegistry registryWrapper = new DefaultServiceRegistry(registry, serviceId);
-				ServiceBuilderContext context = new DefaultServiceBuilderContext(serviceId, registryWrapper);
+				ServiceRegistryImpl registryWrapper = new ServiceRegistryImpl(registry, serviceId);
+				ServiceBuilderContext context = new ServiceBuilderContextImpl(serviceId, registryWrapper);
 				service = builder.build(context);
 			}
 			return service;
 		}
 	}
 	
-	protected static class DefaultServiceBuilderContext implements ServiceBuilderContext {
+	protected static class ServiceBuilderContextImpl implements ServiceBuilderContext {
 		private final String serviceId;
 		private final ServiceRegistry registry;
-		public DefaultServiceBuilderContext(String serviceId, ServiceRegistry registry) {
+		public ServiceBuilderContextImpl(String serviceId, ServiceRegistry registry) {
 			super();
 			this.serviceId = serviceId;
 			this.registry = registry;

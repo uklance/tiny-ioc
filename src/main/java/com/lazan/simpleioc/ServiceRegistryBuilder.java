@@ -3,7 +3,7 @@ package com.lazan.simpleioc;
 import java.util.LinkedList;
 import java.util.List;
 
-import com.lazan.simpleioc.internal.DefaultServiceRegistry;
+import com.lazan.simpleioc.internal.ServiceRegistryImpl;
 
 public class ServiceRegistryBuilder {
 	private List<ServiceModule> modules = new LinkedList<>();
@@ -28,6 +28,6 @@ public class ServiceRegistryBuilder {
 	}
 	
 	public ServiceRegistry build() {
-		return new DefaultServiceRegistry(modules);
+		return new ServiceRegistryImpl(modules);
 	}
 }
