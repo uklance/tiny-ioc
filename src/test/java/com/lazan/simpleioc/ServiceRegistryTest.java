@@ -212,7 +212,7 @@ public class ServiceRegistryTest {
 			buildRegistry(module1, module2, module2).getService(Reader.class);
 			fail();
 		} catch (IocException e) {
-			assertEquals("Multiple decorators found for serviceType java.io.Reader", e.getMessage());
+			assertEquals("Multiple decorators found for serviceType 'java.io.Reader'", e.getMessage());
 		}
 		try {
 			buildRegistry(module1, module3, module3).getService(Reader.class);

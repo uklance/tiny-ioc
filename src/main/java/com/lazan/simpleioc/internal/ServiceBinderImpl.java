@@ -59,7 +59,7 @@ public class ServiceBinderImpl implements ServiceBinder {
 	@Override
 	public <T> void decorate(Class<T> serviceType, ServiceDecorator<T> decorator) {
 		if (decoratorsByServiceType.containsKey(serviceType)) {
-			throw new IocException("Multiple decorators found for serviceType %s", serviceType.getName());
+			throw new IocException("Multiple decorators found for serviceType '%s'", serviceType.getName());
 		}
 		decoratorsByServiceType.put(serviceType, decorator);
 	}

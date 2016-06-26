@@ -100,7 +100,7 @@ public class ServiceRegistryImpl implements ServiceRegistry {
 		List<ServicePointer> pointers = pointersByServiceType.get(serviceType);
 		int count = pointers == null ? 0 : pointers.size();
 		if (count != 1) {
-			throw new IocException("Found %s services for serviceType %s. expecting 1", count, serviceType.getName());
+			throw new IocException("Found %s services for serviceType '%s', expecting 1", count, serviceType.getName());
 		}
 		ServicePointer pointer = pointers.get(0);
 		return serviceType.cast(pointer.get(this));
