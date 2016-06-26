@@ -10,6 +10,7 @@ import java.util.Set;
 
 import com.lazan.simpleioc.IocException;
 import com.lazan.simpleioc.ServiceBuilderContext;
+import com.lazan.simpleioc.ServiceDecorator;
 import com.lazan.simpleioc.ServiceModule;
 import com.lazan.simpleioc.ServiceRegistry;
 
@@ -55,7 +56,15 @@ public class ServiceRegistryImpl implements ServiceRegistry {
 				bindOptions = override;
 			}
 			
-			ServicePointer servicePointer = new ServicePointer(serviceId, serviceType, bindOptions.getServiceBuilder());
+			ServiceDecorator<?> decorator1 = binder.getDecoratorsByServiceId().get(serviceId);
+			ServiceDecorator<?> decorator2 = binder.getDecoratorsByServiceType().get(serviceType);
+			if (decorator1 != null && decorator2 != null) {
+				throw new IocException("Conflicting decorators registered for serviceId '%s' and serviceType '%s'",
+						serviceId, serviceType.getName());
+			}
+			ServiceDecorator<?> decorator = decorator1 == null ? decorator2 : decorator1;
+			
+			ServicePointer servicePointer = new ServicePointer(serviceId, serviceType, bindOptions.getServiceBuilder(), decorator);
 			_pointersByServiceId.put(serviceId, servicePointer);
 
 			List<ServicePointer> pointerList = _pointersByServiceType.get(serviceType);

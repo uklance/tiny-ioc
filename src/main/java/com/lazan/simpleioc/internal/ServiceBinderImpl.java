@@ -1,15 +1,21 @@
 package com.lazan.simpleioc.internal;
 
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
+import com.lazan.simpleioc.IocException;
 import com.lazan.simpleioc.ServiceBindOptions;
 import com.lazan.simpleioc.ServiceBinder;
 import com.lazan.simpleioc.ServiceBuilder;
+import com.lazan.simpleioc.ServiceDecorator;
 
 public class ServiceBinderImpl implements ServiceBinder {
 	private List<ServiceBindOptionsImpl> bindList = new LinkedList<>();
 	private List<ServiceBindOptionsImpl> overrideList = new LinkedList<>();
+	private Map<String, ServiceDecorator<?>> decoratorsByServiceId = new LinkedHashMap<>(); 
+	private Map<Class<?>, ServiceDecorator<?>> decoratorsByServiceType = new LinkedHashMap<>(); 
 	
 	@Override
 	public <T> ServiceBindOptions bind(Class<T> serviceType) {
@@ -50,11 +56,35 @@ public class ServiceBinderImpl implements ServiceBinder {
 		return bindOptions;
 	}
 	
+	@Override
+	public <T> void decorate(Class<T> serviceType, ServiceDecorator<T> decorator) {
+		if (decoratorsByServiceType.containsKey(serviceType)) {
+			throw new IocException("Multiple decorators found for serviceType %s", serviceType.getName());
+		}
+		decoratorsByServiceType.put(serviceType, decorator);
+	}
+	
+	@Override
+	public <T> void decorate(String serviceId, ServiceDecorator<T> decorator) {
+		if (decoratorsByServiceId.containsKey(serviceId)) {
+			throw new IocException("Multiple decorators found for serviceId '%s'", serviceId);
+		}
+		decoratorsByServiceId.put(serviceId, decorator);
+	}
+	
 	public List<ServiceBindOptionsImpl> getBindList() {
 		return bindList;
 	}
 	
 	public List<ServiceBindOptionsImpl> getOverrideList() {
 		return overrideList;
+	}
+	
+	public Map<String, ServiceDecorator<?>> getDecoratorsByServiceId() {
+		return decoratorsByServiceId;
+	}
+	
+	public Map<Class<?>, ServiceDecorator<?>> getDecoratorsByServiceType() {
+		return decoratorsByServiceType;
 	}
 }

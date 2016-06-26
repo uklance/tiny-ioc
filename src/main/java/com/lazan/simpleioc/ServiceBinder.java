@@ -8,4 +8,6 @@ public interface ServiceBinder {
 	<T, C extends T> ServiceBindOptions override(Class<T> serviceType, Class<C> concreteType);
 	<T> ServiceBindOptions override(Class<T> serviceType, T service);
 	<T, C extends T> ServiceBindOptions override(Class<T> serviceType, ServiceBuilder<C> builder);
+	<T> void decorate(Class<T> serviceType, ServiceDecorator<T> decorator);
+	<T> void decorate(String serviceId, ServiceDecorator<T> decorator);
 }
