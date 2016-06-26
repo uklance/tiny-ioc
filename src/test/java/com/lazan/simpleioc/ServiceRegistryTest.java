@@ -7,6 +7,11 @@ import static org.junit.Assert.fail;
 import java.io.BufferedReader;
 import java.io.Reader;
 import java.io.StringReader;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
+import java.util.Map;
+import java.util.Set;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -85,8 +90,19 @@ public class ServiceRegistryTest {
 		NamedStrings ns = registry.getService(NamedStrings.class);
 		assertEquals("hello", ns.string1);
 		assertEquals("world", ns.string2);
+		
+		assertEquals(createSet("string1", "string2", "namedStrings"), registry.getServiceIds());
+		assertEquals(createSet(String.class, NamedStrings.class), registry.getServiceTypes());
+		Map<String, String> expected = new HashMap<>();
+		expected.put("string1",  "hello");
+		expected.put("string2",  "world");
+		assertEquals(expected, registry.getServices(String.class));
 	}
 	
+	private Set<Object> createSet(Object... values) {
+		return new LinkedHashSet<>(Arrays.asList(values));
+	}
+
 	@Test
 	public void testOverride() {
 		ServiceModule module1 = new ServiceModule() {
