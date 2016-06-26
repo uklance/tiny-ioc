@@ -74,6 +74,20 @@ public class ServiceRegistryTest {
 		assertSame(child, parent.child);
 		assertSame(child, grandParent.child);
 		assertSame(parent, grandParent.parent);
+		
+		try {
+			registry.getService("foo");
+			fail();
+		} catch (IocException e) {
+			assertEquals("No service found for serviceId 'foo'", e.getMessage());
+		}
+		try {
+			registry.getService(String.class);
+			fail();
+		} catch (IocException e) {
+			assertEquals("Found 0 services for serviceType 'java.lang.String', expecting 1", e.getMessage());
+		}
+		
 	}
 	
 	@Test
