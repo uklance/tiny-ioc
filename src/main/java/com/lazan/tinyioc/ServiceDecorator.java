@@ -1,4 +1,4 @@
-package com.lazan.simpleioc;
+package com.lazan.tinyioc;
 
 public interface ServiceDecorator<T> {
 	T decorate(T candidate, ServiceBuilderContext context);

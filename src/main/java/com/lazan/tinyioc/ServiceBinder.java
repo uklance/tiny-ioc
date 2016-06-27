@@ -1,4 +1,4 @@
-package com.lazan.simpleioc;
+package com.lazan.tinyioc;
 
 public interface ServiceBinder {
 	<T> ServiceBindOptions bind(Class<T> serviceType);

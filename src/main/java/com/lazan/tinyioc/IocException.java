@@ -1,4 +1,4 @@
-package com.lazan.simpleioc;
+package com.lazan.tinyioc;
 
 @SuppressWarnings("serial")
 public class IocException extends RuntimeException {

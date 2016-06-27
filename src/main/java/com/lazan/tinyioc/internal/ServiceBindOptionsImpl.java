@@ -1,7 +1,7 @@
-package com.lazan.simpleioc.internal;
+package com.lazan.tinyioc.internal;
 
-import com.lazan.simpleioc.ServiceBindOptions;
-import com.lazan.simpleioc.ServiceBuilder;
+import com.lazan.tinyioc.ServiceBindOptions;
+import com.lazan.tinyioc.ServiceBuilder;
 
 public class ServiceBindOptionsImpl implements ServiceBindOptions {
 	private final Class<?> serviceType;

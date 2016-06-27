@@ -1,4 +1,4 @@
-package com.lazan.simpleioc;
+package com.lazan.tinyioc;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
@@ -17,6 +17,14 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.junit.Test;
+
+import com.lazan.tinyioc.IocException;
+import com.lazan.tinyioc.ServiceBinder;
+import com.lazan.tinyioc.ServiceBuilderContext;
+import com.lazan.tinyioc.ServiceDecorator;
+import com.lazan.tinyioc.ServiceModule;
+import com.lazan.tinyioc.ServiceRegistry;
+import com.lazan.tinyioc.ServiceRegistryBuilder;
 
 public class ServiceRegistryTest {
 	public static class Child {}

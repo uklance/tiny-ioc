@@ -1,14 +1,14 @@
-package com.lazan.simpleioc.internal;
+package com.lazan.tinyioc.internal;
 
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
-import com.lazan.simpleioc.IocException;
-import com.lazan.simpleioc.ServiceBuilder;
-import com.lazan.simpleioc.ServiceBuilderContext;
-import com.lazan.simpleioc.ServiceDecorator;
-import com.lazan.simpleioc.internal.ServiceRegistryImpl.ServiceBuilderContextImpl;
+import com.lazan.tinyioc.IocException;
+import com.lazan.tinyioc.ServiceBuilder;
+import com.lazan.tinyioc.ServiceBuilderContext;
+import com.lazan.tinyioc.ServiceDecorator;
+import com.lazan.tinyioc.internal.ServiceRegistryImpl.ServiceBuilderContextImpl;
 
 @SuppressWarnings({ "rawtypes", "unchecked" })
 class ServicePointer {

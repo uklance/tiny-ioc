@@ -1,4 +1,4 @@
-package com.lazan.simpleioc.internal;
+package com.lazan.tinyioc.internal;
 
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -8,11 +8,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.lazan.simpleioc.IocException;
-import com.lazan.simpleioc.ServiceBuilderContext;
-import com.lazan.simpleioc.ServiceDecorator;
-import com.lazan.simpleioc.ServiceModule;
-import com.lazan.simpleioc.ServiceRegistry;
+import com.lazan.tinyioc.IocException;
+import com.lazan.tinyioc.ServiceBuilderContext;
+import com.lazan.tinyioc.ServiceDecorator;
+import com.lazan.tinyioc.ServiceModule;
+import com.lazan.tinyioc.ServiceRegistry;
 
 public class ServiceRegistryImpl implements ServiceRegistry {
 	private final Set<String> serviceIdStack;

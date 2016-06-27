@@ -1,4 +1,4 @@
-package com.lazan.simpleioc.internal;
+package com.lazan.tinyioc.internal;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
@@ -6,10 +6,10 @@ import java.lang.reflect.Constructor;
 import javax.inject.Inject;
 import javax.inject.Named;
 
-import com.lazan.simpleioc.IocException;
-import com.lazan.simpleioc.ServiceBuilder;
-import com.lazan.simpleioc.ServiceBuilderContext;
-import com.lazan.simpleioc.ServiceRegistry;
+import com.lazan.tinyioc.IocException;
+import com.lazan.tinyioc.ServiceBuilder;
+import com.lazan.tinyioc.ServiceBuilderContext;
+import com.lazan.tinyioc.ServiceRegistry;
 
 @SuppressWarnings({ "rawtypes", "unchecked" })
 public class ConstructorServiceBuilder<T> implements ServiceBuilder<T> {

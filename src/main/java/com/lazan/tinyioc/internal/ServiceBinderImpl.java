@@ -1,15 +1,15 @@
-package com.lazan.simpleioc.internal;
+package com.lazan.tinyioc.internal;
 
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import com.lazan.simpleioc.IocException;
-import com.lazan.simpleioc.ServiceBindOptions;
-import com.lazan.simpleioc.ServiceBinder;
-import com.lazan.simpleioc.ServiceBuilder;
-import com.lazan.simpleioc.ServiceDecorator;
+import com.lazan.tinyioc.IocException;
+import com.lazan.tinyioc.ServiceBindOptions;
+import com.lazan.tinyioc.ServiceBinder;
+import com.lazan.tinyioc.ServiceBuilder;
+import com.lazan.tinyioc.ServiceDecorator;
 
 public class ServiceBinderImpl implements ServiceBinder {
 	private List<ServiceBindOptionsImpl> bindList = new LinkedList<>();

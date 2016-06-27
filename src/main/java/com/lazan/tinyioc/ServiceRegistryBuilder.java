@@ -1,9 +1,9 @@
-package com.lazan.simpleioc;
+package com.lazan.tinyioc;
 
 import java.util.LinkedList;
 import java.util.List;
 
-import com.lazan.simpleioc.internal.ServiceRegistryImpl;
+import com.lazan.tinyioc.internal.ServiceRegistryImpl;
 
 public class ServiceRegistryBuilder {
 	private List<ServiceModule> modules = new LinkedList<>();

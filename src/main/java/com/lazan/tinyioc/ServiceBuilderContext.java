@@ -1,4 +1,4 @@
-package com.lazan.simpleioc;
+package com.lazan.tinyioc;
 
 public interface ServiceBuilderContext {
 	String getServiceId();
