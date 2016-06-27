@@ -1,6 +1,7 @@
 package com.lazan.tinyioc;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.fail;
 
@@ -17,14 +18,6 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.junit.Test;
-
-import com.lazan.tinyioc.IocException;
-import com.lazan.tinyioc.ServiceBinder;
-import com.lazan.tinyioc.ServiceBuilderContext;
-import com.lazan.tinyioc.ServiceDecorator;
-import com.lazan.tinyioc.ServiceModule;
-import com.lazan.tinyioc.ServiceRegistry;
-import com.lazan.tinyioc.ServiceRegistryBuilder;
 
 public class ServiceRegistryTest {
 	public static class Child {}
@@ -79,6 +72,9 @@ public class ServiceRegistryTest {
 		Parent parent = registry.getService(Parent.class);
 		Child child = registry.getService(Child.class);
 		
+		assertNotNull(child);
+		assertNotNull(parent);
+		assertNotNull(grandParent);
 		assertSame(child, parent.child);
 		assertSame(child, grandParent.child);
 		assertSame(parent, grandParent.parent);
@@ -99,7 +95,7 @@ public class ServiceRegistryTest {
 	}
 	
 	@Test
-	public void testNamed() {
+	public void testInjectNamed() {
 		ServiceModule module = new ServiceModule() {
 			@Override
 			public void bind(ServiceBinder binder) {
@@ -209,7 +205,7 @@ public class ServiceRegistryTest {
 	
 	@Test
 	public void testDecorate() throws Exception {
-		ServiceDecorator<Reader> readerDecorator = new ServiceDecorator<Reader>() {
+		final ServiceDecorator<Reader> readerDecorator = new ServiceDecorator<Reader>() {
 			@Override
 			public Reader decorate(Reader candidate, ServiceBuilderContext context) {
 				return new BufferedReader(candidate);
