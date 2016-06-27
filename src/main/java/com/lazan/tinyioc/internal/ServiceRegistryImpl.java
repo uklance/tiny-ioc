@@ -9,19 +9,20 @@ import java.util.Map;
 import java.util.Set;
 
 import com.lazan.tinyioc.IocException;
+import com.lazan.tinyioc.ServiceBuilder;
 import com.lazan.tinyioc.ServiceBuilderContext;
 import com.lazan.tinyioc.ServiceDecorator;
 import com.lazan.tinyioc.ServiceModule;
 import com.lazan.tinyioc.ServiceRegistry;
 
 public class ServiceRegistryImpl implements ServiceRegistry {
-	private final Set<String> serviceIdStack;
-	private final Map<String, ServicePointer> pointersByServiceId;
-	private final Map<Class<?>, List<ServicePointer>> pointersByServiceType;
+	private final Set<String> idStack;
+	private final Map<String, ServiceReference> referencesById;
+	private final Map<Class<?>, List<ServiceReference>> referencesByType;
 	
 	public ServiceRegistryImpl(Iterable<ServiceModule> modules) {
-		Map<String, ServicePointer> _pointersByServiceId = new LinkedHashMap<>();
-		Map<Class<?>, List<ServicePointer>> _pointersByServiceType = new LinkedHashMap<>();
+		Map<String, ServiceReference> _referencesById = new LinkedHashMap<>();
+		Map<Class<?>, List<ServiceReference>> _referencesByType = new LinkedHashMap<>();
 		
 		ServiceBinderImpl binder = new ServiceBinderImpl();
 		
@@ -29,100 +30,128 @@ public class ServiceRegistryImpl implements ServiceRegistry {
 			module.bind(binder);
 		}
 		
-		Map<String, ServiceBindOptionsImpl> overrideMap = new LinkedHashMap<>();
-		for (ServiceBindOptionsImpl override : binder.getOverrideList()) {
-			String serviceId = getServiceId(override);
-			if (overrideMap.containsKey(serviceId)) {
-				throw new IocException("Duplicate override for serviceId '%s'", serviceId);
-			}
-			overrideMap.put(serviceId, override);
-		}
-		for (ServiceBindOptionsImpl candidate : binder.getBindList()) {
+		Map<String, ServiceBinderOptionsImpl> overrideMap = createOverrideMap(binder);
+		Map<String, ServiceDecoratorOptionsImpl> decoratorMap = createDecoratorMap(binder);	
+		
+		for (ServiceBinderOptionsImpl candidate : binder.getBindList()) {
 			String serviceId = getServiceId(candidate);
 			Class<?> serviceType = candidate.getServiceType();
-			if (_pointersByServiceId.containsKey(serviceId)) {
+			if (_referencesById.containsKey(serviceId)) {
 				throw new IocException("Duplicate serviceId '%s'", serviceId);
 			}
-			ServiceBindOptionsImpl override = overrideMap.get(serviceId);
-			
-			ServiceBindOptionsImpl bindOptions;
-			if (override == null) {
-				bindOptions = candidate;
-			} else {
-				if (!override.getServiceType().equals(serviceType)) {
-					throw new IocException("Invalid override for serviceId '%s', expected %s found %s",
-							serviceId, serviceType.getName(), override.getServiceType().getName());
-				}
-				bindOptions = override;
-			}
-			
-			ServiceDecorator<?> decorator1 = binder.getDecoratorsByServiceId().get(serviceId);
-			ServiceDecorator<?> decorator2 = binder.getDecoratorsByServiceType().get(serviceType);
-			if (decorator1 != null && decorator2 != null) {
-				throw new IocException("Conflicting decorators registered for serviceId '%s' and serviceType '%s'",
-						serviceId, serviceType.getName());
-			}
-			ServiceDecorator<?> decorator = decorator1 == null ? decorator2 : decorator1;
-			
-			ServicePointer servicePointer = new ServicePointer(serviceId, serviceType, bindOptions.getServiceBuilder(), decorator);
-			_pointersByServiceId.put(serviceId, servicePointer);
+			ServiceBuilder<?> overrideBuilder = getOverrideServiceBuilder(serviceId, serviceType, overrideMap);
+			ServiceBuilder<?> builder = overrideBuilder == null ? candidate.getServiceBuilder() : overrideBuilder;
+			ServiceDecorator<?> decorator = getServiceDecorator(serviceId, serviceType, decoratorMap);
 
-			List<ServicePointer> pointerList = _pointersByServiceType.get(serviceType);
-			if (pointerList == null) {
-				pointerList = new LinkedList<>();
-				_pointersByServiceType.put(serviceType, pointerList);
+			ServiceReference reference = new ServiceReference(serviceId, serviceType, builder, decorator);
+			_referencesById.put(serviceId, reference);
+
+			List<ServiceReference> referenceList = _referencesByType.get(serviceType);
+			if (referenceList == null) {
+				referenceList = new LinkedList<>();
+				_referencesByType.put(serviceType, referenceList);
 			}
-			pointerList.add(servicePointer);
+			referenceList.add(reference);
 		}
 		
 		for (String serviceId : overrideMap.keySet()) {
-			if (!_pointersByServiceId.containsKey(serviceId)) {
+			if (!_referencesById.containsKey(serviceId)) {
 				throw new IocException("Attempted to override unknown serviceId '%s'", serviceId);
 			}
 		}
-		for (String serviceId : binder.getDecoratorsByServiceId().keySet()) {
-			if (!_pointersByServiceId.containsKey(serviceId)) {
+		for (String serviceId : decoratorMap.keySet()) {
+			if (!_referencesById.containsKey(serviceId)) {
 				throw new IocException("Attempted to decorate unknown serviceId '%s'", serviceId);
 			}
 		}
-		for (Class<?> serviceType : binder.getDecoratorsByServiceType().keySet()) {
-			if (!_pointersByServiceType.containsKey(serviceType)) {
-				throw new IocException("Attempted to decorate unknown serviceType '%s'", serviceType.getName());
-			}
-		}
+
+		idStack = Collections.emptySet();
+		referencesById = Collections.unmodifiableMap(_referencesById);
+		referencesByType = Collections.unmodifiableMap(_referencesByType);
+	}
+	
+	protected ServiceRegistryImpl(ServiceRegistryImpl registry, String serviceId) {
+		this.referencesById = registry.referencesById;
+		this.referencesByType = registry.referencesByType;
 		
-		serviceIdStack = Collections.emptySet();
-		pointersByServiceId = Collections.unmodifiableMap(_pointersByServiceId);
-		pointersByServiceType = Collections.unmodifiableMap(_pointersByServiceType);
+		Set<String> _idStack = new LinkedHashSet<>(registry.idStack);
+		_idStack.add(serviceId);
+		this.idStack = Collections.unmodifiableSet(_idStack);
+	}	
+
+	protected ServiceDecorator<?> getServiceDecorator(
+			String serviceId,
+			Class<?> serviceType, Map<String, 
+			ServiceDecoratorOptionsImpl> decoratorMap)
+	{
+		ServiceDecoratorOptionsImpl options = decoratorMap.get(serviceId);
+		if (options == null) {
+			return null;
+		}
+		if (!options.getServiceType().equals(serviceType)) {
+			throw new IocException("Invalid decorator for serviceId '%s', expected %s found %s",
+					serviceId, serviceType.getName(), options.getServiceType().getName());
+		}
+		return options.getServiceDecorator();
 	}
 
-	protected ServiceRegistryImpl(ServiceRegistryImpl registry, String serviceId) {
-		this.pointersByServiceId = registry.pointersByServiceId;
-		this.pointersByServiceType = registry.pointersByServiceType;
-		
-		Set<String> _serviceIdStack = new LinkedHashSet<>(registry.serviceIdStack);
-		_serviceIdStack.add(serviceId);
-		this.serviceIdStack = Collections.unmodifiableSet(_serviceIdStack);
+	protected ServiceBuilder<?> getOverrideServiceBuilder(
+			String serviceId,
+			Class<?> serviceType, 
+			Map<String, ServiceBinderOptionsImpl> overrideMap) {
+		ServiceBinderOptionsImpl options = overrideMap.get(serviceId);
+		if (options == null) {
+			return null;
+		}
+		if (!options.getServiceType().equals(serviceType)) {
+			throw new IocException("Invalid override for serviceId '%s', expected %s found %s",
+					serviceId, serviceType.getName(), options.getServiceType().getName());
+		}
+		return options.getServiceBuilder();
+	}
+
+	protected Map<String, ServiceDecoratorOptionsImpl> createDecoratorMap(ServiceBinderImpl binder) {
+		Map<String, ServiceDecoratorOptionsImpl> decoratorMap = new LinkedHashMap<>();
+		for (ServiceDecoratorOptionsImpl decorateOptions : binder.getDecoratorList()) {
+			String serviceId = getServiceId(decorateOptions);
+			if (decoratorMap.containsKey(serviceId)) {
+				throw new IocException("Duplicate override for serviceId '%s'", serviceId);
+			}
+			decoratorMap.put(serviceId, decorateOptions);
+		}
+		return decoratorMap;
+	}
+
+	protected Map<String, ServiceBinderOptionsImpl> createOverrideMap(ServiceBinderImpl binder) {
+		Map<String, ServiceBinderOptionsImpl> overrideMap = new LinkedHashMap<>();
+		for (ServiceBinderOptionsImpl overrideOptions : binder.getOverrideList()) {
+			String serviceId = getServiceId(overrideOptions);
+			if (overrideMap.containsKey(serviceId)) {
+				throw new IocException("Duplicate override for serviceId '%s'", serviceId);
+			}
+			overrideMap.put(serviceId, overrideOptions);
+		}
+		return overrideMap;
 	}
 
 	@Override
 	public <T> T getService(Class<T> serviceType) {
-		List<ServicePointer> pointers = pointersByServiceType.get(serviceType);
-		int count = pointers == null ? 0 : pointers.size();
+		List<ServiceReference> references = referencesByType.get(serviceType);
+		int count = references == null ? 0 : references.size();
 		if (count != 1) {
 			throw new IocException("Found %s services for serviceType '%s', expecting 1", count, serviceType.getName());
 		}
-		ServicePointer pointer = pointers.get(0);
-		return serviceType.cast(pointer.get(this));
+		ServiceReference reference = references.get(0);
+		return serviceType.cast(reference.get(this));
 	}
 	
 	@Override
 	public Object getService(String serviceId) {
-		ServicePointer pointer = pointersByServiceId.get(serviceId);
-		if (pointer == null) {
+		ServiceReference reference = referencesById.get(serviceId);
+		if (reference == null) {
 			throw new IocException("No service found for serviceId '%s'", serviceId);
 		}
-		return pointer.get(this);
+		return reference.get(this);
 	}
 	
 	@Override
@@ -137,36 +166,43 @@ public class ServiceRegistryImpl implements ServiceRegistry {
 	@Override
 	public <T> Map<String, T> getServices(Class<T> serviceType) {
 		Map<String, T> services = new LinkedHashMap<>();
-		List<ServicePointer> pointers = pointersByServiceType.get(serviceType);
-		for (ServicePointer pointer : pointers) {
-			T service = serviceType.cast(pointer.get(this));
-			services.put(pointer.getServiceId(), service);
+		List<ServiceReference> references = referencesByType.get(serviceType);
+		for (ServiceReference reference : references) {
+			T service = serviceType.cast(reference.get(this));
+			services.put(reference.getServiceId(), service);
 		}
 		return Collections.unmodifiableMap(services);
 	}
 	
 	@Override
 	public Set<String> getServiceIds() {
-		return pointersByServiceId.keySet();
+		return referencesById.keySet();
 	}
 	
 	@Override
 	public Set<Class<?>> getServiceTypes() {
-		return pointersByServiceType.keySet();
+		return referencesByType.keySet();
 	}
 	
 	public Set<String> getServiceIdStack() {
-		return serviceIdStack;
+		return idStack;
 	}
 
-	protected String getServiceId(ServiceBindOptionsImpl bindOptions) {
-		if (bindOptions.getServiceId() != null) {
-			return bindOptions.getServiceId();
+	protected String getServiceId(ServiceBinderOptionsImpl options) {
+		if (options.getServiceId() != null) {
+			return options.getServiceId();
 		}
-		String simpleName = bindOptions.getServiceType().getSimpleName();
+		String simpleName = options.getServiceType().getSimpleName();
 		return Character.toLowerCase(simpleName.charAt(0)) + simpleName.substring(1);
 	}
 	
+	protected String getServiceId(ServiceDecoratorOptionsImpl options) {
+		if (options.getServiceId() != null) {
+			return options.getServiceId();
+		}
+		String simpleName = options.getServiceType().getSimpleName();
+		return Character.toLowerCase(simpleName.charAt(0)) + simpleName.substring(1);
+	}	
 	protected static class ServiceBuilderContextImpl implements ServiceBuilderContext {
 		private final ServiceRegistry registry;
 		private final String serviceId;

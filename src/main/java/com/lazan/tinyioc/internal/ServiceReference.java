@@ -11,14 +11,14 @@ import com.lazan.tinyioc.ServiceDecorator;
 import com.lazan.tinyioc.internal.ServiceRegistryImpl.ServiceBuilderContextImpl;
 
 @SuppressWarnings({ "rawtypes", "unchecked" })
-class ServicePointer {
+class ServiceReference {
 	private final String serviceId;
 	private final Class<?> serviceType;
 	private final ServiceBuilder<?> builder;
 	private final ServiceDecorator decorator;
 	private volatile Object service;
 	
-	public ServicePointer(String serviceId, Class<?> serviceType, ServiceBuilder<?> builder, ServiceDecorator<?> decorator) {
+	public ServiceReference(String serviceId, Class<?> serviceType, ServiceBuilder<?> builder, ServiceDecorator<?> decorator) {
 		super();
 		this.serviceId = serviceId;
 		this.serviceType = serviceType;

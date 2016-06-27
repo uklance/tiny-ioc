@@ -1,90 +1,74 @@
 package com.lazan.tinyioc.internal;
 
-import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 
-import com.lazan.tinyioc.IocException;
-import com.lazan.tinyioc.ServiceBindOptions;
 import com.lazan.tinyioc.ServiceBinder;
+import com.lazan.tinyioc.ServiceBinderOptions;
 import com.lazan.tinyioc.ServiceBuilder;
 import com.lazan.tinyioc.ServiceDecorator;
+import com.lazan.tinyioc.ServiceDecoratorOptions;
 
 public class ServiceBinderImpl implements ServiceBinder {
-	private List<ServiceBindOptionsImpl> bindList = new LinkedList<>();
-	private List<ServiceBindOptionsImpl> overrideList = new LinkedList<>();
-	private Map<String, ServiceDecorator<?>> decoratorsByServiceId = new LinkedHashMap<>(); 
-	private Map<Class<?>, ServiceDecorator<?>> decoratorsByServiceType = new LinkedHashMap<>(); 
+	private List<ServiceBinderOptionsImpl> bindList = new LinkedList<>();
+	private List<ServiceBinderOptionsImpl> overrideList = new LinkedList<>();
+	private List<ServiceDecoratorOptionsImpl> decoratorList = new LinkedList<>(); 
 	
 	@Override
-	public <T> ServiceBindOptions bind(Class<T> serviceType) {
+	public <T> ServiceBinderOptions bind(Class<T> serviceType) {
 		return bind(serviceType, new ConstructorServiceBuilder<>(serviceType));
 	}
 	
 	@Override
-	public <T> ServiceBindOptions bind(Class<T> serviceType, T service) {
+	public <T> ServiceBinderOptions bind(Class<T> serviceType, T service) {
 		return bind(serviceType, new ConstantServiceBuilder<T>(service));
 	}
 	
 	@Override
-	public <T, C extends T> ServiceBindOptions bind(Class<T> serviceType, Class<C> concreteType) {
+	public <T, C extends T> ServiceBinderOptions bind(Class<T> serviceType, Class<C> concreteType) {
 		return bind(serviceType, new ConstructorServiceBuilder<C>(concreteType));
 	}
 	
 	@Override
-	public <T, C extends T> ServiceBindOptions bind(Class<T> serviceType, ServiceBuilder<C> builder) {
-		ServiceBindOptionsImpl bindOptions = new ServiceBindOptionsImpl(serviceType, builder);
-		bindList.add(bindOptions);
-		return bindOptions;
+	public <T, C extends T> ServiceBinderOptions bind(Class<T> serviceType, ServiceBuilder<C> builder) {
+		ServiceBinderOptionsImpl options = new ServiceBinderOptionsImpl(serviceType, builder);
+		bindList.add(options);
+		return options;
 	}
 	
 	@Override
-	public <T, C extends T> ServiceBindOptions override(Class<T> serviceType, Class<C> concreteType) {
+	public <T, C extends T> ServiceBinderOptions override(Class<T> serviceType, Class<C> concreteType) {
 		return override(serviceType, new ConstructorServiceBuilder<C>(concreteType));
 	}
 	
 	@Override
-	public <T> ServiceBindOptions override(Class<T> serviceType, T service) {
+	public <T> ServiceBinderOptions override(Class<T> serviceType, T service) {
 		return override(serviceType, new ConstantServiceBuilder<T>(service));
 	}
 	
 	@Override
-	public <T, C extends T> ServiceBindOptions override(Class<T> serviceType, ServiceBuilder<C> builder) {
-		ServiceBindOptionsImpl bindOptions = new ServiceBindOptionsImpl(serviceType, builder);
-		overrideList.add(bindOptions);
-		return bindOptions;
+	public <T, C extends T> ServiceBinderOptions override(Class<T> serviceType, ServiceBuilder<C> builder) {
+		ServiceBinderOptionsImpl options = new ServiceBinderOptionsImpl(serviceType, builder);
+		overrideList.add(options);
+		return options;
 	}
 	
 	@Override
-	public <T> void decorate(Class<T> serviceType, ServiceDecorator<T> decorator) {
-		if (decoratorsByServiceType.containsKey(serviceType)) {
-			throw new IocException("Multiple decorators found for serviceType '%s'", serviceType.getName());
-		}
-		decoratorsByServiceType.put(serviceType, decorator);
+	public <T> ServiceDecoratorOptions decorate(Class<T> serviceType, ServiceDecorator<T> decorator) {
+		ServiceDecoratorOptionsImpl options = new ServiceDecoratorOptionsImpl(serviceType, decorator);
+		decoratorList.add(options);
+		return options;
 	}
 	
-	@Override
-	public <T> void decorate(String serviceId, ServiceDecorator<T> decorator) {
-		if (decoratorsByServiceId.containsKey(serviceId)) {
-			throw new IocException("Multiple decorators found for serviceId '%s'", serviceId);
-		}
-		decoratorsByServiceId.put(serviceId, decorator);
-	}
-	
-	public List<ServiceBindOptionsImpl> getBindList() {
+	public List<ServiceBinderOptionsImpl> getBindList() {
 		return bindList;
 	}
 	
-	public List<ServiceBindOptionsImpl> getOverrideList() {
+	public List<ServiceBinderOptionsImpl> getOverrideList() {
 		return overrideList;
 	}
 	
-	public Map<String, ServiceDecorator<?>> getDecoratorsByServiceId() {
-		return decoratorsByServiceId;
-	}
-	
-	public Map<Class<?>, ServiceDecorator<?>> getDecoratorsByServiceType() {
-		return decoratorsByServiceType;
+	public List<ServiceDecoratorOptionsImpl> getDecoratorList() {
+		return decoratorList;
 	}
 }

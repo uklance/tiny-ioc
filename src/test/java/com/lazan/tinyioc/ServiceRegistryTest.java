@@ -209,6 +209,12 @@ public class ServiceRegistryTest {
 	
 	@Test
 	public void testDecorate() throws Exception {
+		ServiceDecorator<Reader> readerDecorator = new ServiceDecorator<Reader>() {
+			@Override
+			public Reader decorate(Reader candidate, ServiceBuilderContext context) {
+				return new BufferedReader(candidate);
+			}
+		};
 		ServiceModule module1 = new ServiceModule() {
 			@Override
 			public void bind(ServiceBinder binder) {
@@ -218,59 +224,23 @@ public class ServiceRegistryTest {
 		ServiceModule module2 = new ServiceModule() {
 			@Override
 			public void bind(ServiceBinder binder) {
-				binder.decorate(Reader.class, new ServiceDecorator<Reader>() {
-					@Override
-					public Reader decorate(Reader candidate, ServiceBuilderContext context) {
-						return new BufferedReader(candidate);
-					}
-				});
+				binder.decorate(Reader.class, readerDecorator);
 			}
 		};
-		ServiceModule module3 = new ServiceModule() {
-			@Override
-			public void bind(ServiceBinder binder) {
-				binder.decorate("reader", new ServiceDecorator<Reader>() {
-					@Override
-					public Reader decorate(Reader candidate, ServiceBuilderContext context) {
-						return new BufferedReader(candidate);
-					}
-				});
-			}
-		};
+
 		Reader reader1 = buildRegistry(module1).getService(Reader.class);
 		Reader reader2 = buildRegistry(module1, module2).getService(Reader.class);
-		Reader reader3 = buildRegistry(module1, module3).getService(Reader.class);
 		assertEquals(StringReader.class, reader1.getClass());
 		assertEquals(BufferedReader.class, reader2.getClass());
-		assertEquals(BufferedReader.class, reader3.getClass());
 		assertEquals("hello", ((BufferedReader) reader2).readLine());
-		assertEquals("hello", ((BufferedReader) reader3).readLine());
 		try {
 			buildRegistry(module1, module2, module2).getService(Reader.class);
 			fail();
 		} catch (IocException e) {
-			assertEquals("Multiple decorators found for serviceType 'java.io.Reader'", e.getMessage());
-		}
-		try {
-			buildRegistry(module1, module3, module3).getService(Reader.class);
-			fail();
-		} catch (IocException e) {
-			assertEquals("Multiple decorators found for serviceId 'reader'", e.getMessage());
-		}
-		try {
-			buildRegistry(module1, module2, module3).getService(Reader.class);
-			fail();
-		} catch (IocException e) {
-			assertEquals("Conflicting decorators registered for serviceId 'reader' and serviceType 'java.io.Reader'", e.getMessage());
+			assertEquals("Duplicate override for serviceId 'reader'", e.getMessage());
 		}
 		try {
 			buildRegistry(module2).getService(Reader.class);
-			fail();
-		} catch (IocException e) {
-			assertEquals("Attempted to decorate unknown serviceType 'java.io.Reader'", e.getMessage());
-		}
-		try {
-			buildRegistry(module3).getService(Reader.class);
 			fail();
 		} catch (IocException e) {
 			assertEquals("Attempted to decorate unknown serviceId 'reader'", e.getMessage());

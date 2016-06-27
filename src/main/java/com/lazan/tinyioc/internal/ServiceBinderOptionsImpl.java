@@ -1,21 +1,21 @@
 package com.lazan.tinyioc.internal;
 
-import com.lazan.tinyioc.ServiceBindOptions;
+import com.lazan.tinyioc.ServiceBinderOptions;
 import com.lazan.tinyioc.ServiceBuilder;
 
-public class ServiceBindOptionsImpl implements ServiceBindOptions {
+public class ServiceBinderOptionsImpl implements ServiceBinderOptions {
 	private final Class<?> serviceType;
-	private final ServiceBuilder<?> builder;
+	private final ServiceBuilder<?> serviceBuilder;
 	private String serviceId;
 	
-	public ServiceBindOptionsImpl(Class<?> serviceType, ServiceBuilder<?> builder) {
+	public ServiceBinderOptionsImpl(Class<?> serviceType, ServiceBuilder<?> serviceBuilder) {
 		super();
 		this.serviceType = serviceType;
-		this.builder = builder;
+		this.serviceBuilder = serviceBuilder;
 	}
 
 	@Override
-	public ServiceBindOptions withServiceId(String serviceId) {
+	public ServiceBinderOptions withServiceId(String serviceId) {
 		this.serviceId = serviceId;
 		return this;
 	}
@@ -29,6 +29,6 @@ public class ServiceBindOptionsImpl implements ServiceBindOptions {
 	}
 	
 	public ServiceBuilder<?> getServiceBuilder() {
-		return builder;
+		return serviceBuilder;
 	}
 }
