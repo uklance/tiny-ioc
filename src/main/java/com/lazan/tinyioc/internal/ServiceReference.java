@@ -8,7 +8,6 @@ import com.lazan.tinyioc.IocException;
 import com.lazan.tinyioc.ServiceBuilder;
 import com.lazan.tinyioc.ServiceBuilderContext;
 import com.lazan.tinyioc.ServiceDecorator;
-import com.lazan.tinyioc.internal.ServiceRegistryImpl.ServiceBuilderContextImpl;
 
 @SuppressWarnings({ "rawtypes", "unchecked" })
 class ServiceReference {

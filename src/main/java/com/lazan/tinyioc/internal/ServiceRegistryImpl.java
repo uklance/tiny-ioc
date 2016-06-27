@@ -10,7 +10,6 @@ import java.util.Set;
 
 import com.lazan.tinyioc.IocException;
 import com.lazan.tinyioc.ServiceBuilder;
-import com.lazan.tinyioc.ServiceBuilderContext;
 import com.lazan.tinyioc.ServiceDecorator;
 import com.lazan.tinyioc.ServiceModule;
 import com.lazan.tinyioc.ServiceRegistry;
@@ -202,32 +201,5 @@ public class ServiceRegistryImpl implements ServiceRegistry {
 		}
 		String simpleName = options.getServiceType().getSimpleName();
 		return Character.toLowerCase(simpleName.charAt(0)) + simpleName.substring(1);
-	}	
-	protected static class ServiceBuilderContextImpl implements ServiceBuilderContext {
-		private final ServiceRegistry registry;
-		private final String serviceId;
-		private final Class<?> serviceType;
-		
-		public ServiceBuilderContextImpl(ServiceRegistry registry, String serviceId, Class<?> serviceType) {
-			super();
-			this.registry = registry;
-			this.serviceId = serviceId;
-			this.serviceType = serviceType;
-		}
-
-		@Override
-		public String getServiceId() {
-			return serviceId;
-		}
-		
-		@Override
-		public ServiceRegistry getServiceRegistry() {
-			return registry;
-		}
-		
-		@Override
-		public Class<?> getServiceType() {
-			return serviceType;
-		}
 	}
 }

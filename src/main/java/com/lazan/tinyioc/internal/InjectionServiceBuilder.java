@@ -12,10 +12,10 @@ import com.lazan.tinyioc.ServiceBuilderContext;
 import com.lazan.tinyioc.ServiceRegistry;
 
 @SuppressWarnings({ "rawtypes", "unchecked" })
-public class ConstructorServiceBuilder<T> implements ServiceBuilder<T> {
+public class InjectionServiceBuilder<T> implements ServiceBuilder<T> {
 	private final Class<T> concreteType;
 	
-	public ConstructorServiceBuilder(Class<T> concreteType) {
+	public InjectionServiceBuilder(Class<T> concreteType) {
 		super();
 		this.concreteType = concreteType;
 	}
