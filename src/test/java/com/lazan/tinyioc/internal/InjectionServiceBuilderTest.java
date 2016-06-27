@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.when;
 
+import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.junit.Test;
@@ -41,6 +42,16 @@ public class InjectionServiceBuilderTest {
 		}
 	}
 	
+	public static class MultipleConstructors {
+		public MultipleConstructors() {}
+		public MultipleConstructors(String value) {}
+	}
+
+	public static class MultipleInjectConstructors {
+		@Inject public MultipleInjectConstructors() {}
+		@Inject public MultipleInjectConstructors(String value) {}
+	}
+	
 	@Test
 	public void testNoPublicConstructor() {
 		try {
@@ -48,6 +59,28 @@ public class InjectionServiceBuilderTest {
 			fail();
 		} catch (IocException e) {
 			assertEquals("No public constructors found for type " + NoPublicConstructor.class.getName(), e.getMessage());
+		}
+	}
+	
+	@Test
+	public void testMultipleConstructors() {
+		try {
+			new InjectionServiceBuilder<>(MultipleConstructors.class).build(createServiceBuilderContext());
+			fail();
+		} catch (IocException e) {
+			String expected = String.format("Found 2 public constructors for type %s, please annotate one with javax.inject.Inject", MultipleConstructors.class.getName());
+			assertEquals(expected, e.getMessage());
+		}
+	}
+	
+	@Test
+	public void testMultipleInjectConstructors() {
+		try {
+			new InjectionServiceBuilder<>(MultipleInjectConstructors.class).build(createServiceBuilderContext());
+			fail();
+		} catch (IocException e) {
+			String expected = "Found 2 public constructors annotated with javax.inject.Inject for type " + MultipleInjectConstructors.class.getName(); 
+			assertEquals(expected, e.getMessage());
 		}
 	}
 	
