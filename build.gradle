@@ -4,6 +4,9 @@ plugins {
 	id 'com.github.kt3k.coveralls' version '2.6.3'
 }
 
+group = 'com.lazan'
+version = '0.0.1'
+
 repositories {
 	jcenter()
 }
