@@ -207,7 +207,7 @@ public class ServiceRegistryTest {
 	public void testDecorate() throws Exception {
 		final ServiceDecorator<Reader> readerDecorator = new ServiceDecorator<Reader>() {
 			@Override
-			public Reader decorate(Reader candidate, ServiceBuilderContext context) {
+			public Reader decorate(Reader candidate, ServiceBuilderContext<Reader> context) {
 				return new BufferedReader(candidate);
 			}
 		};
