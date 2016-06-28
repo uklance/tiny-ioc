@@ -9,15 +9,14 @@ import com.lazan.tinyioc.ServiceBuilder;
 import com.lazan.tinyioc.ServiceBuilderContext;
 import com.lazan.tinyioc.ServiceDecorator;
 
-@SuppressWarnings({ "rawtypes", "unchecked" })
-class ServiceReference {
+public class ServiceReference<T> {
 	private final String serviceId;
-	private final Class<?> serviceType;
-	private final ServiceBuilder<?> builder;
-	private final ServiceDecorator decorator;
+	private final Class<T> serviceType;
+	private final ServiceBuilder<T> builder;
+	private final ServiceDecorator<T> decorator;
 	private volatile Object service;
 	
-	public ServiceReference(String serviceId, Class<?> serviceType, ServiceBuilder<?> builder, ServiceDecorator<?> decorator) {
+	public ServiceReference(String serviceId, Class<T> serviceType, ServiceBuilder<T> builder, ServiceDecorator<T> decorator) {
 		super();
 		this.serviceId = serviceId;
 		this.serviceType = serviceType;
@@ -34,9 +33,9 @@ class ServiceReference {
 				throw new IocException("Circular dependency reference detected %s", references);
 			}
 			ServiceRegistryImpl registryWrapper = new ServiceRegistryImpl(registry, serviceId);
-			ServiceBuilderContext context = new ServiceBuilderContextImpl(registryWrapper, serviceId, serviceType);
+			ServiceBuilderContext<T> context = new ServiceBuilderContextImpl<T>(registryWrapper, serviceId, serviceType);
 			
-			Object candidate = builder.build(context);
+			T candidate = builder.build(context);
 			if (decorator != null) {
 				service = decorator.decorate(candidate, context);
 			} else {
@@ -50,7 +49,7 @@ class ServiceReference {
 		return serviceId;
 	}
 	
-	public Class<?> getServiceType() {
+	public Class<T> getServiceType() {
 		return serviceType;
 	}
 }

@@ -3,12 +3,12 @@ package com.lazan.tinyioc.internal;
 import com.lazan.tinyioc.ServiceBuilderContext;
 import com.lazan.tinyioc.ServiceRegistry;
 
-public class ServiceBuilderContextImpl implements ServiceBuilderContext {
+public class ServiceBuilderContextImpl<T> implements ServiceBuilderContext<T> {
 	private final ServiceRegistry registry;
 	private final String serviceId;
-	private final Class<?> serviceType;
+	private final Class<T> serviceType;
 	
-	public ServiceBuilderContextImpl(ServiceRegistry registry, String serviceId, Class<?> serviceType) {
+	public ServiceBuilderContextImpl(ServiceRegistry registry, String serviceId, Class<T> serviceType) {
 		super();
 		this.registry = registry;
 		this.serviceId = serviceId;
@@ -26,7 +26,7 @@ public class ServiceBuilderContextImpl implements ServiceBuilderContext {
 	}
 	
 	@Override
-	public Class<?> getServiceType() {
+	public Class<T> getServiceType() {
 		return serviceType;
 	}
 }

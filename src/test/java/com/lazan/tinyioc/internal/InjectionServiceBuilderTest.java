@@ -55,7 +55,7 @@ public class InjectionServiceBuilderTest {
 	@Test
 	public void testNoPublicConstructor() {
 		try {
-			new InjectionServiceBuilder<>(NoPublicConstructor.class).build(createServiceBuilderContext());
+			build(NoPublicConstructor.class);
 			fail();
 		} catch (IocException e) {
 			assertEquals("No public constructors found for type " + NoPublicConstructor.class.getName(), e.getMessage());
@@ -65,7 +65,7 @@ public class InjectionServiceBuilderTest {
 	@Test
 	public void testMultipleConstructors() {
 		try {
-			new InjectionServiceBuilder<>(MultipleConstructors.class).build(createServiceBuilderContext());
+			build(MultipleConstructors.class);
 			fail();
 		} catch (IocException e) {
 			String expected = String.format("Found 2 public constructors for type %s, please annotate one with javax.inject.Inject", MultipleConstructors.class.getName());
@@ -76,7 +76,7 @@ public class InjectionServiceBuilderTest {
 	@Test
 	public void testMultipleInjectConstructors() {
 		try {
-			new InjectionServiceBuilder<>(MultipleInjectConstructors.class).build(createServiceBuilderContext());
+			build(MultipleInjectConstructors.class);
 			fail();
 		} catch (IocException e) {
 			String expected = "Found 2 public constructors annotated with javax.inject.Inject for type " + MultipleInjectConstructors.class.getName(); 
@@ -87,7 +87,7 @@ public class InjectionServiceBuilderTest {
 	@Test
 	public void testSingleValue() {
 		when(registry.getService(String.class)).thenReturn("foo");
-		SingleValue sv = new InjectionServiceBuilder<>(SingleValue.class).build(createServiceBuilderContext());
+		SingleValue sv = build(SingleValue.class);
 		assertEquals("foo", sv.value);
 	}	
 
@@ -95,12 +95,13 @@ public class InjectionServiceBuilderTest {
 	public void testNamedValues() {
 		when(registry.getService("value1", String.class)).thenReturn("foo");
 		when(registry.getService("value2", String.class)).thenReturn("bar");
-		NamedValues nv = new InjectionServiceBuilder<>(NamedValues.class).build(createServiceBuilderContext());
+		NamedValues nv = build(NamedValues.class);
 		assertEquals("foo", nv.value1);
 		assertEquals("bar", nv.value2);
-	}	
-
-	private ServiceBuilderContext createServiceBuilderContext() {
-		return new ServiceBuilderContextImpl(registry, null, null);
+	}
+	
+	private <T> T build(Class<T> type) {
+		ServiceBuilderContext<T> context = new ServiceBuilderContextImpl<>(registry, null, type);
+		return new InjectionServiceBuilder<>(type).build(context);
 	}
 }

@@ -15,7 +15,7 @@ public class ServiceDecoratorOptionsImpl implements ServiceDecoratorOptions {
 	}
 
 	@Override
-	public ServiceDecoratorOptions withId(String serviceId) {
+	public ServiceDecoratorOptions withServiceId(String serviceId) {
 		this.serviceId = serviceId;
 		return this;
 	}

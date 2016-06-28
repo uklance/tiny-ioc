@@ -1,7 +1,7 @@
 package com.lazan.tinyioc;
 
-public interface ServiceBuilderContext {
+public interface ServiceBuilderContext<T> {
 	String getServiceId();
-	Class<?> getServiceType();
+	Class<T> getServiceType();
 	ServiceRegistry getServiceRegistry();
 }
