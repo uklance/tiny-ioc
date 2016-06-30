@@ -25,20 +25,20 @@ public class ServiceBinderImpl implements ServiceBinder {
 	}
 	
 	@Override
-	public <T, C extends T> ServiceBinderOptions bind(Class<T> serviceType, Class<C> concreteType) {
-		return bind(serviceType, new InjectionServiceBuilder<C>(concreteType));
+	public <T> ServiceBinderOptions bind(Class<T> serviceType, Class<? extends T> concreteType) {
+		return bind(serviceType, new InjectionServiceBuilder<>(concreteType));
 	}
 	
 	@Override
-	public <T, C extends T> ServiceBinderOptions bind(Class<T> serviceType, ServiceBuilder<C> builder) {
+	public <T> ServiceBinderOptions bind(Class<T> serviceType, ServiceBuilder<? extends T> builder) {
 		ServiceBinderOptionsImpl options = new ServiceBinderOptionsImpl(serviceType, builder);
 		bindList.add(options);
 		return options;
 	}
 	
 	@Override
-	public <T, C extends T> ServiceBinderOptions override(Class<T> serviceType, Class<C> concreteType) {
-		return override(serviceType, new InjectionServiceBuilder<C>(concreteType));
+	public <T> ServiceBinderOptions override(Class<T> serviceType, Class<? extends T> concreteType) {
+		return override(serviceType, new InjectionServiceBuilder<>(concreteType));
 	}
 	
 	@Override
@@ -47,14 +47,14 @@ public class ServiceBinderImpl implements ServiceBinder {
 	}
 	
 	@Override
-	public <T, C extends T> ServiceBinderOptions override(Class<T> serviceType, ServiceBuilder<C> builder) {
+	public <T> ServiceBinderOptions override(Class<T> serviceType, ServiceBuilder<? extends T> builder) {
 		ServiceBinderOptionsImpl options = new ServiceBinderOptionsImpl(serviceType, builder);
 		overrideList.add(options);
 		return options;
 	}
 	
 	@Override
-	public <T> ServiceDecoratorOptions decorate(Class<T> serviceType, ServiceDecorator<T> decorator) {
+	public <T> ServiceDecoratorOptions decorate(Class<T> serviceType, ServiceDecorator<? extends T> decorator) {
 		ServiceDecoratorOptionsImpl options = new ServiceDecoratorOptionsImpl(serviceType, decorator);
 		decoratorList.add(options);
 		return options;
