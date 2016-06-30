@@ -1,5 +1,6 @@
 package com.lazan.tinyioc;
 
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -21,10 +22,7 @@ public class ServiceRegistryBuilder {
 	}
 	
 	public ServiceRegistryBuilder withModules(ServiceModule... modules) {
-		for (ServiceModule module : modules) {
-			this.modules.add(module);
-		}
-		return this;
+		return withModules(Arrays.asList(modules));
 	}
 	
 	public ServiceRegistry build() {
