@@ -4,10 +4,12 @@ plugins {
 	id 'maven-publish'
 	id 'com.github.kt3k.coveralls' version '2.6.3'
 	id 'com.jfrog.bintray' version '1.7'
+	id 'nebula.javadoc-jar' version '4.4.4'
+	id 'nebula.source-jar' version '4.4.4'
 }
 
 group = 'com.lazan'
-version = '0.0.2-SNAPSHOT'
+version = '0.0.2'
 
 repositories {
 	jcenter()
@@ -30,9 +32,6 @@ publishing {
     publications {
         maven(MavenPublication) {
             from components.java
-            groupId project.group
-            artifactId project.name
-            version project.version
         }
     }
 }
@@ -40,8 +39,8 @@ publishing {
 bintray {
     user = project.properties['bintrayUser']
     key = project.properties['bintrayKey']
-	publications = ['maven']
-	publish = true
+	publications = ['maven', 'nebula']
+	publish = false
 	pkg {
 		repo = 'maven'
 		name = project.name

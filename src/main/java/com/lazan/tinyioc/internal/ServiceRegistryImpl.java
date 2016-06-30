@@ -16,12 +16,12 @@ import com.lazan.tinyioc.ServiceRegistry;
 
 public class ServiceRegistryImpl implements ServiceRegistry {
 	private final Set<String> idStack;
-	private final Map<String, ServiceReference> referencesById;
-	private final Map<Class<?>, List<ServiceReference>> referencesByType;
+	private final Map<String, ServiceReference<?>> referencesById;
+	private final Map<Class<?>, List<ServiceReference<?>>> referencesByType;
 	
 	public ServiceRegistryImpl(Iterable<ServiceModule> modules) {
-		Map<String, ServiceReference> _referencesById = new LinkedHashMap<>();
-		Map<Class<?>, List<ServiceReference>> _referencesByType = new LinkedHashMap<>();
+		Map<String, ServiceReference<?>> _referencesById = new LinkedHashMap<>();
+		Map<Class<?>, List<ServiceReference<?>>> _referencesByType = new LinkedHashMap<>();
 		
 		ServiceBinderImpl binder = new ServiceBinderImpl();
 		
@@ -42,10 +42,11 @@ public class ServiceRegistryImpl implements ServiceRegistry {
 			ServiceBuilder<?> builder = overrideBuilder == null ? candidate.getServiceBuilder() : overrideBuilder;
 			ServiceDecorator<?> decorator = getServiceDecorator(serviceId, serviceType, decoratorMap);
 
-			ServiceReference reference = new ServiceReference(serviceId, serviceType, builder, decorator);
+			@SuppressWarnings({"unchecked", "rawtypes"})
+			ServiceReference<?> reference = new ServiceReference(serviceId, serviceType, builder, decorator);
 			_referencesById.put(serviceId, reference);
 
-			List<ServiceReference> referenceList = _referencesByType.get(serviceType);
+			List<ServiceReference<?>> referenceList = _referencesByType.get(serviceType);
 			if (referenceList == null) {
 				referenceList = new LinkedList<>();
 				_referencesByType.put(serviceType, referenceList);
@@ -135,18 +136,18 @@ public class ServiceRegistryImpl implements ServiceRegistry {
 
 	@Override
 	public <T> T getService(Class<T> serviceType) {
-		List<ServiceReference> references = referencesByType.get(serviceType);
+		List<ServiceReference<?>> references = referencesByType.get(serviceType);
 		int count = references == null ? 0 : references.size();
 		if (count != 1) {
 			throw new IocException("Found %s services for serviceType '%s', expecting 1", count, serviceType.getName());
 		}
-		ServiceReference reference = references.get(0);
+		ServiceReference<?> reference = references.get(0);
 		return serviceType.cast(reference.get(this));
 	}
 	
 	@Override
 	public Object getService(String serviceId) {
-		ServiceReference reference = referencesById.get(serviceId);
+		ServiceReference<?> reference = referencesById.get(serviceId);
 		if (reference == null) {
 			throw new IocException("No service found for serviceId '%s'", serviceId);
 		}
@@ -165,8 +166,8 @@ public class ServiceRegistryImpl implements ServiceRegistry {
 	@Override
 	public <T> Map<String, T> getServices(Class<T> serviceType) {
 		Map<String, T> services = new LinkedHashMap<>();
-		List<ServiceReference> references = referencesByType.get(serviceType);
-		for (ServiceReference reference : references) {
+		List<ServiceReference<?>> references = referencesByType.get(serviceType);
+		for (ServiceReference<?> reference : references) {
 			T service = serviceType.cast(reference.get(this));
 			services.put(reference.getServiceId(), service);
 		}
