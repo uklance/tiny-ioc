@@ -2,6 +2,7 @@ package com.lazan.tinyioc.internal;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -21,37 +22,44 @@ public class InjectionServiceBuilder<T> implements ServiceBuilder<T> {
 	}
 
 	@Override
-	public T build(ServiceBuilderContext context) {
+	public T build(ServiceBuilderContext<T> context) {
 		try {
 			Constructor<T> constructor = findConstructor(concreteType);
-			ServiceRegistry registry = context.getServiceRegistry();
-			Class[] paramTypes = constructor.getParameterTypes();
-			if (paramTypes.length == 0) {
+			if (constructor.getParameterTypes().length == 0) {
 				return constructor.newInstance();
 			}
-			Object[] params = new Object[paramTypes.length];
-			Annotation[][] paramAnnotations = constructor.getParameterAnnotations();
-			for (int i = 0; i < paramTypes.length; ++i) {
-				Class<?> paramType = paramTypes[i];
-				Annotation[] anns = paramAnnotations[i];
-				Named named = find(anns, Named.class);
-				Object param;
-				if (named != null) {
-					param = registry.getService(named.value(), paramType);
-				} else {
-					param = registry.getService(paramType);
-				}
-				params[i] = param;
-			}
-			return constructor.newInstance(params);
+			Object[] params = createConstructorParameters(constructor, context);
+			T service = constructor.newInstance(params);
+			injectFields(service, context);
+			return service;
 		} catch (IocException e) {
 			throw e;
 		} catch (Exception e) {
 			throw new IocException(e, "Error building service '%s'", context.getServiceId());
 		}
 	}
+	
+	protected Object[] createConstructorParameters(Constructor<T> constructor, ServiceBuilderContext<T> context) {
+		Class[] paramTypes = constructor.getParameterTypes();
+		ServiceRegistry registry = context.getServiceRegistry();
+		Object[] params = new Object[paramTypes.length];
+		Annotation[][] paramAnnotations = constructor.getParameterAnnotations();
+		for (int i = 0; i < paramTypes.length; ++i) {
+			Class<?> paramType = paramTypes[i];
+			Annotation[] anns = paramAnnotations[i];
+			Named named = findAnnotation(anns, Named.class);
+			Object param;
+			if (named != null) {
+				param = registry.getService(named.value(), paramType);
+			} else {
+				param = registry.getService(paramType);
+			}
+			params[i] = param;
+		}
+		return params;
+	}
 
-	protected <A extends Annotation> A find(Annotation[] anns, Class<A> type) {
+	protected <A extends Annotation> A findAnnotation(Annotation[] anns, Class<A> type) {
 		for (Annotation ann : anns) {
 			if (type.equals(ann.annotationType())) {
 				return type.cast(ann);
@@ -83,5 +91,30 @@ public class InjectionServiceBuilder<T> implements ServiceBuilder<T> {
 			throw new IocException("Found %s public constructors for type %s, please annotate one with javax.inject.Inject", constructors.length, concreteType.getName());
 		}
 		throw new IocException("Found %s public constructors annotated with javax.inject.Inject for type %s", injectCount, concreteType.getName());
+	}
+
+	protected void injectFields(T service, ServiceBuilderContext<T> context) {
+		Class<?> currentType = context.getServiceType();
+		ServiceRegistry registry = context.getServiceRegistry();
+		while (currentType != null){ 
+			for (Field field : currentType.getDeclaredFields()) {
+				if (field.getAnnotation(Inject.class) != null) {
+					Named named = field.getAnnotation(Named.class);
+					try {
+						Object value;
+						if (named != null) {
+							value = registry.getService(named.value(), field.getType());
+						} else {
+							value = registry.getService(field.getType());
+						}
+						field.setAccessible(true);
+						field.set(service, value);
+					} catch (Exception e) {
+						throw new IocException(e, "Error injecting field '%s' in serviceId '%s'", field.getName(), context.getServiceId());
+					}
+				}
+			}
+			currentType = currentType.getSuperclass();
+		}
 	}
 }

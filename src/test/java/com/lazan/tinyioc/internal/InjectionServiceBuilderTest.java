@@ -1,8 +1,11 @@
 package com.lazan.tinyioc.internal;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.when;
+
+import java.util.Date;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -52,6 +55,22 @@ public class InjectionServiceBuilderTest {
 		@Inject public MultipleInjectConstructors(String value) {}
 	}
 	
+	public abstract static class AbstractInjectFields {
+		@Inject protected String string1;
+	}
+	
+	public static class InjectFields extends AbstractInjectFields {
+		private final Integer integer;
+		
+		public InjectFields(Integer integer) {
+			super();
+			this.integer = integer;
+		}
+		@Inject @Named("date1") private Date date1;
+		@Inject @Named("date2") private Date date2;
+		private String string2;
+	}
+	
 	@Test
 	public void testNoPublicConstructor() {
 		try {
@@ -98,6 +117,21 @@ public class InjectionServiceBuilderTest {
 		NamedValues nv = build(NamedValues.class);
 		assertEquals("foo", nv.value1);
 		assertEquals("bar", nv.value2);
+	}
+	
+	@Test
+	public void testInjectFields() {
+		when(registry.getService(Integer.class)).thenReturn(1);
+		when(registry.getService("date1", Date.class)).thenReturn(new Date(2));
+		when(registry.getService("date2", Date.class)).thenReturn(new Date(3));
+		when(registry.getService(String.class)).thenReturn("hello");
+		InjectFields values = build(InjectFields.class);
+		
+		assertEquals(new Integer(1), values.integer);
+		assertEquals(2, values.date1.getTime());
+		assertEquals(3, values.date2.getTime());
+		assertEquals("hello", values.string1);
+		assertNull(values.string2);
 	}
 	
 	private <T> T build(Class<T> type) {
