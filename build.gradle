@@ -9,7 +9,7 @@ plugins {
 }
 
 group = 'com.lazan'
-version = '0.0.2'
+version = '0.0.3-SNAPSHOT'
 
 repositories {
 	jcenter()
@@ -40,7 +40,7 @@ bintray {
     user = project.properties['bintrayUser']
     key = project.properties['bintrayKey']
 	publications = ['maven', 'nebula']
-	publish = false
+	publish = true
 	pkg {
 		repo = 'maven'
 		name = project.name
