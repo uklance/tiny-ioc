@@ -91,7 +91,6 @@ public class ServiceRegistryTest {
 		} catch (IocException e) {
 			assertEquals("Found 0 services for serviceType 'java.lang.String', expecting 1", e.getMessage());
 		}
-		
 	}
 	
 	@Test
@@ -245,5 +244,22 @@ public class ServiceRegistryTest {
 
 	private ServiceRegistry buildRegistry(ServiceModule... modules) {
 		return new ServiceRegistryBuilder().withModules(modules).build();
+	}
+	
+	public static class TestModule implements ServiceModule {
+		@Override
+		public void bind(ServiceBinder binder) {
+			binder.bind(String.class, "foo");
+		}
+	}
+	
+	@Test
+	public void testWithModuleType() {
+		String string = new ServiceRegistryBuilder()
+				.withModuleType(TestModule.class)
+				.build()
+				.getService(String.class);
+		
+		assertEquals("foo", string);
 	}
 }

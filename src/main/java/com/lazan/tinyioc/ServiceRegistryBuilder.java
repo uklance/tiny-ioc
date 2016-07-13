@@ -25,6 +25,22 @@ public class ServiceRegistryBuilder {
 		return withModules(Arrays.asList(modules));
 	}
 	
+	public ServiceRegistryBuilder withModuleType(Class<? extends ServiceModule> moduleType) {
+		return withModuleTypes(Arrays.asList(moduleType));
+	}
+	
+	public ServiceRegistryBuilder withModuleTypes(Iterable<Class<? extends ServiceModule>> moduleTypes) {
+		List<ServiceModule> modules = new LinkedList<>();
+		for (Class<? extends ServiceModule> moduleType : moduleTypes) {
+			try {
+				modules.add(moduleType.newInstance());
+			} catch (Exception e) {
+				throw new IocException(e, "Error instantiating %s", moduleType.getSimpleName());
+			}
+		}
+		return withModules(modules);
+	}
+	
 	public ServiceRegistry build() {
 		return new ServiceRegistryImpl(modules);
 	}
