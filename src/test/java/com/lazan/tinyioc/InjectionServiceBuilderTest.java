@@ -1,4 +1,4 @@
-package com.lazan.tinyioc.internal;
+package com.lazan.tinyioc;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -15,9 +15,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
-import com.lazan.tinyioc.IocException;
-import com.lazan.tinyioc.ServiceBuilderContext;
-import com.lazan.tinyioc.ServiceRegistry;
+import com.lazan.tinyioc.internal.ServiceBuilderContextImpl;
 
 @RunWith(MockitoJUnitRunner.class)
 public class InjectionServiceBuilderTest {
@@ -69,6 +67,10 @@ public class InjectionServiceBuilderTest {
 		@Inject @Named("date1") private Date date1;
 		@Inject @Named("date2") private Date date2;
 		private String string2;
+	}
+
+	public static class InjectFields2 {
+		@Inject @Named("string1") private String string1;
 	}
 	
 	@Test
@@ -132,6 +134,13 @@ public class InjectionServiceBuilderTest {
 		assertEquals(3, values.date2.getTime());
 		assertEquals("hello", values.string1);
 		assertNull(values.string2);
+	}
+
+	@Test
+	public void testInjectFields2() {
+		when(registry.getService("string1", String.class)).thenReturn("hello");
+		InjectFields2 values = build(InjectFields2.class);
+		assertEquals("hello", values.string1);
 	}
 	
 	private <T> T build(Class<T> type) {

@@ -1,4 +1,4 @@
-package com.lazan.tinyioc.internal;
+package com.lazan.tinyioc;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
@@ -6,11 +6,6 @@ import java.lang.reflect.Field;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-
-import com.lazan.tinyioc.IocException;
-import com.lazan.tinyioc.ServiceBuilder;
-import com.lazan.tinyioc.ServiceBuilderContext;
-import com.lazan.tinyioc.ServiceRegistry;
 
 @SuppressWarnings({ "rawtypes", "unchecked" })
 public class InjectionServiceBuilder<T> implements ServiceBuilder<T> {
@@ -25,9 +20,6 @@ public class InjectionServiceBuilder<T> implements ServiceBuilder<T> {
 	public T build(ServiceBuilderContext<T> context) {
 		try {
 			Constructor<T> constructor = findConstructor(concreteType);
-			if (constructor.getParameterTypes().length == 0) {
-				return constructor.newInstance();
-			}
 			Object[] params = createConstructorParameters(constructor, context);
 			T service = constructor.newInstance(params);
 			injectFields(service, context);
@@ -41,6 +33,9 @@ public class InjectionServiceBuilder<T> implements ServiceBuilder<T> {
 	
 	protected Object[] createConstructorParameters(Constructor<T> constructor, ServiceBuilderContext<T> context) {
 		Class[] paramTypes = constructor.getParameterTypes();
+		if (paramTypes.length == 0) {
+			return null;
+		}
 		ServiceRegistry registry = context.getServiceRegistry();
 		Object[] params = new Object[paramTypes.length];
 		Annotation[][] paramAnnotations = constructor.getParameterAnnotations();

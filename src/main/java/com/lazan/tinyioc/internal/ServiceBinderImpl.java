@@ -3,6 +3,7 @@ package com.lazan.tinyioc.internal;
 import java.util.LinkedList;
 import java.util.List;
 
+import com.lazan.tinyioc.InjectionServiceBuilder;
 import com.lazan.tinyioc.ServiceBinder;
 import com.lazan.tinyioc.ServiceBinderOptions;
 import com.lazan.tinyioc.ServiceBuilder;
