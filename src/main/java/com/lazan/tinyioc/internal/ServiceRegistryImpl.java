@@ -159,7 +159,7 @@ public class ServiceRegistryImpl implements ServiceRegistry {
 		try {
 			return serviceType.cast(getService(serviceId));
 		} catch (ClassCastException e) {
-			throw new IocException("Incompatible type for serviceId '%s'", serviceId);
+			throw new IocException(e, "Incompatible type for serviceId '%s'", serviceId);
 		}
 	}
 	

@@ -3,9 +3,9 @@ package com.lazan.tinyioc;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import java.io.Reader;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -88,6 +88,14 @@ public class ServiceRegistryTest {
 			fail();
 		} catch (IocException e) {
 			assertEquals("Found 0 services for serviceType 'java.lang.String', expecting 1", e.getMessage());
+		}
+		
+		try {
+			registry.getService("child", String.class);
+			fail();
+		} catch (IocException e) {
+			assertEquals("Incompatible type for serviceId 'child'", e.getMessage());
+			assertTrue(e.getCause() instanceof ClassCastException);
 		}
 	}
 	
@@ -232,8 +240,8 @@ public class ServiceRegistryTest {
 			@Override
 			public void bind(ServiceBinder binder) {
 				binder.bind(String.class, "hello2").withServiceId("string2");
-				binder.decorate(String.class, new StringDecorator("two-%s-two")).withServiceId("string2");
 				binder.bind(String.class, "hello3").withServiceId("string3");
+				binder.decorate(String.class, new StringDecorator("two-%s-two")).withServiceId("string2");
 				binder.decorate(String.class, new StringDecorator("three-%s-three")).withServiceId("string3");
 			}
 		};
@@ -244,7 +252,7 @@ public class ServiceRegistryTest {
 		assertEquals("three-hello3-three", registry3.getService("string3"));
 		
 		try {
-			buildRegistry(module1, module2, module2).getService(Reader.class);
+			buildRegistry(module1, module2, module2).getService(String.class);
 			fail();
 		} catch (IocException e) {
 			assertEquals("Duplicate override for serviceId 'string'", e.getMessage());
