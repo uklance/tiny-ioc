@@ -217,8 +217,8 @@ public class ServiceRegistryTest {
 		}
 		
 		@Override
-		public String decorate(String candidate, ServiceBuilderContext<String> delegate) {
-			return String.format(pattern, candidate);
+		public String decorate(String delegate, ServiceBuilderContext<String> context) {
+			return String.format(pattern, delegate);
 		}
 	}
 	
