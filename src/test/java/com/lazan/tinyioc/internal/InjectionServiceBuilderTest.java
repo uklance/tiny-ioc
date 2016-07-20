@@ -1,4 +1,4 @@
-package com.lazan.tinyioc;
+package com.lazan.tinyioc.internal;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -15,6 +15,10 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
+import com.lazan.tinyioc.IocException;
+import com.lazan.tinyioc.ServiceBuilderContext;
+import com.lazan.tinyioc.ServiceRegistry;
+import com.lazan.tinyioc.internal.InjectionServiceBuilder;
 import com.lazan.tinyioc.internal.ServiceBuilderContextImpl;
 
 @RunWith(MockitoJUnitRunner.class)

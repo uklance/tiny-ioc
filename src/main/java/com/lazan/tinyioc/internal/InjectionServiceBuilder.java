@@ -1,4 +1,4 @@
-package com.lazan.tinyioc;
+package com.lazan.tinyioc.internal;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
@@ -6,6 +6,11 @@ import java.lang.reflect.Field;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+
+import com.lazan.tinyioc.IocException;
+import com.lazan.tinyioc.ServiceBuilder;
+import com.lazan.tinyioc.ServiceBuilderContext;
+import com.lazan.tinyioc.ServiceRegistry;
 
 @SuppressWarnings({ "rawtypes", "unchecked" })
 public class InjectionServiceBuilder<T> implements ServiceBuilder<T> {
@@ -20,7 +25,7 @@ public class InjectionServiceBuilder<T> implements ServiceBuilder<T> {
 	public T build(ServiceBuilderContext<T> context) {
 		try {
 			Constructor<T> constructor = findConstructor(concreteType);
-			Object[] params = createConstructorParameters(constructor, context);
+			Object[] params = getParameters(constructor, context);
 			T service = constructor.newInstance(params);
 			injectFields(service, context);
 			return service;
@@ -31,27 +36,30 @@ public class InjectionServiceBuilder<T> implements ServiceBuilder<T> {
 		}
 	}
 	
-	protected Object[] createConstructorParameters(Constructor<T> constructor, ServiceBuilderContext<T> context) {
+	protected Object[] getParameters(Constructor<T> constructor, ServiceBuilderContext<T> context) {
 		Class[] paramTypes = constructor.getParameterTypes();
 		if (paramTypes.length == 0) {
 			return null;
 		}
-		ServiceRegistry registry = context.getServiceRegistry();
 		Object[] params = new Object[paramTypes.length];
-		Annotation[][] paramAnnotations = constructor.getParameterAnnotations();
 		for (int i = 0; i < paramTypes.length; ++i) {
-			Class<?> paramType = paramTypes[i];
-			Annotation[] anns = paramAnnotations[i];
-			Named named = findAnnotation(anns, Named.class);
-			Object param;
-			if (named != null) {
-				param = registry.getService(named.value(), paramType);
-			} else {
-				param = registry.getService(paramType);
-			}
-			params[i] = param;
+			params[i] = getParameter(constructor, i, context);
 		}
 		return params;
+	}
+
+	protected Object getParameter(Constructor<T> constructor, int paramIndex, ServiceBuilderContext<T> context) {
+		Class<?> paramType = constructor.getParameterTypes()[paramIndex];
+		Annotation[] annotations = constructor.getParameterAnnotations()[paramIndex];
+		ServiceRegistry registry = context.getServiceRegistry();
+		Named named = findAnnotation(annotations, Named.class);
+		Object param;
+		if (named != null) {
+			param = registry.getService(named.value(), paramType);
+		} else {
+			param = registry.getService(paramType);
+		}
+		return param;
 	}
 
 	protected <A extends Annotation> A findAnnotation(Annotation[] anns, Class<A> type) {
