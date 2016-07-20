@@ -5,9 +5,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.fail;
 
-import java.io.BufferedReader;
 import java.io.Reader;
-import java.io.StringReader;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -202,43 +200,60 @@ public class ServiceRegistryTest {
 		}
 	}
 	
+	static class StringDecorator implements ServiceDecorator<String> {
+		private final String pattern;
+
+		public StringDecorator(String pattern) {
+			super();
+			this.pattern = pattern;
+		}
+		
+		@Override
+		public String decorate(String candidate, ServiceBuilderContext<String> delegate) {
+			return String.format(pattern, candidate);
+		}
+	}
+	
 	@Test
 	public void testDecorate() throws Exception {
-		final ServiceDecorator<Reader> readerDecorator = new ServiceDecorator<Reader>() {
-			@Override
-			public Reader decorate(Reader candidate, ServiceBuilderContext<Reader> context) {
-				return new BufferedReader(candidate);
-			}
-		};
 		ServiceModule module1 = new ServiceModule() {
 			@Override
 			public void bind(ServiceBinder binder) {
-				binder.bind(Reader.class, new StringReader("hello"));
+				binder.bind(String.class, "hello1");
 			}
 		};
 		ServiceModule module2 = new ServiceModule() {
 			@Override
 			public void bind(ServiceBinder binder) {
-				binder.decorate(Reader.class, readerDecorator);
+				binder.decorate(String.class, new StringDecorator("one-%s-one"));
 			}
 		};
-
-		Reader reader1 = buildRegistry(module1).getService(Reader.class);
-		Reader reader2 = buildRegistry(module1, module2).getService(Reader.class);
-		assertEquals(StringReader.class, reader1.getClass());
-		assertEquals(BufferedReader.class, reader2.getClass());
-		assertEquals("hello", ((BufferedReader) reader2).readLine());
+		ServiceModule module3 = new ServiceModule() {
+			@Override
+			public void bind(ServiceBinder binder) {
+				binder.bind(String.class, "hello2").withServiceId("string2");
+				binder.decorate(String.class, new StringDecorator("two-%s-two")).withServiceId("string2");
+				binder.bind(String.class, "hello3").withServiceId("string3");
+				binder.decorate(String.class, new StringDecorator("three-%s-three")).withServiceId("string3");
+			}
+		};
+		assertEquals("one-hello1-one", buildRegistry(module1, module2).getService(String.class));
+		
+		ServiceRegistry registry3 = buildRegistry(module3);
+		assertEquals("two-hello2-two", registry3.getService("string2"));
+		assertEquals("three-hello3-three", registry3.getService("string3"));
+		
 		try {
 			buildRegistry(module1, module2, module2).getService(Reader.class);
 			fail();
 		} catch (IocException e) {
-			assertEquals("Duplicate override for serviceId 'reader'", e.getMessage());
+			assertEquals("Duplicate override for serviceId 'string'", e.getMessage());
 		}
 		try {
-			buildRegistry(module2).getService(Reader.class);
+			buildRegistry(module2).getService(String.class);
 			fail();
 		} catch (IocException e) {
-			assertEquals("Attempted to decorate unknown serviceId 'reader'", e.getMessage());
+			assertEquals("Attempted to decorate unknown serviceId 'string'", e.getMessage());
 		}
 	}
 
