@@ -54,7 +54,7 @@ public class AnnotatedServiceModuleTest {
 		assertEquals("foox", registry.getService("string2"));
 		assertEquals("baz", registry.getService("string3"));
 		assertEquals(1000, registry.getService(Date.class).getTime());
-		assertEquals(1000, registry.getService(Integer.class));
+		assertEquals(1000, registry.getService(Integer.class).intValue());
 		assertEquals(1200, registry.getService(Long.class).longValue());
 	}
 }
