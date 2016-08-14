@@ -115,7 +115,7 @@ public class AnnotatedServiceModule implements ServiceModule {
 		return new ServiceBuilder() {
 			@Override
 			public Object build(ServiceBuilderContext context) {
-				Object[] params = getParameters(method, context, null);
+				Object[] params = getParameters(method, context);
 				try {
 					return method.invoke(instance, params);
 				} catch (Exception e) {
@@ -129,7 +129,7 @@ public class AnnotatedServiceModule implements ServiceModule {
 	protected void decorate(Object instance, Method method, ServiceBinder binder) {
 		ServiceDecoratorOptions options = binder.decorate(method.getReturnType(), new ServiceDecorator() {
 			public Object decorate(Object delegate, ServiceBuilderContext context) {
-				Object[] params = getParameters(method, context, delegate);
+				Object[] params = getParameters(method, context, context.getServiceId(), delegate);
 				try {
 					return method.invoke(instance, params);
 				} catch (Exception e) {
@@ -137,9 +137,9 @@ public class AnnotatedServiceModule implements ServiceModule {
 				}
 			}
 		});
-		Named named = findAnnotation(method.getAnnotations(), Named.class);
-		if (named != null) {
-			options.withServiceId(named.value());
+		String serviceId = method.getAnnotation(Decorate.class).value();
+		if (!serviceId.isEmpty()) {
+			options.withServiceId(serviceId);
 		}
 	}
 	
@@ -151,9 +151,13 @@ public class AnnotatedServiceModule implements ServiceModule {
 		}
 		return null;
 	}
+	@SuppressWarnings("rawtypes")
+	protected Object[] getParameters(Method method, ServiceBuilderContext context) {
+		return getParameters(method, context, null, null);
+	}
 	
 	@SuppressWarnings("rawtypes")
-	protected Object[] getParameters(Method method, ServiceBuilderContext context, Object delegate) {
+	protected Object[] getParameters(Method method, ServiceBuilderContext context, String delegateId, Object delegate) {
 		Class<?>[] paramTypes = method.getParameterTypes();
 		if (paramTypes.length == 0) {
 			return null;
@@ -163,16 +167,25 @@ public class AnnotatedServiceModule implements ServiceModule {
 		Object[] params = new Object[paramTypes.length];
 		for (int i = 0; i < paramTypes.length; ++i) {
 			Class<?> paramType = paramTypes[i];
-			
-			Object param;
 			Named named = findAnnotation(paramAnnotations[i], Named.class);
-			boolean useDelegate = delegate != null && paramType.equals(context.getServiceType()) && (named == null || named.value().equals(context.getServiceId()));
+			boolean useDelegate = false;
+			Object param;
+			if (delegateId != null) {
+				String paramId = named == null ? ServiceRegistryImpl.getDefaultServiceId(paramType) : named.value();
+				useDelegate = delegateId.equals(paramId);
+			}
 			if (useDelegate) {
 				param = delegate;
-			} else  if (named != null) {
-				param = registry.getService(named.value(), paramType);
-			} else {
-				param = registry.getService(paramType);
+			} else  {
+				try {
+					if (named != null) {
+						param = registry.getService(named.value(), paramType);
+					} else {
+						param = registry.getService(paramType);
+					}
+				} catch (IocException e) {
+					throw new IocException(e, "Error with argument %s of %s.%s", i, method.getDeclaringClass().getSimpleName(), method.getName());
+				}
 			}
 			params[i] = param;
 		}

@@ -115,7 +115,7 @@ public class ServiceRegistryImpl implements ServiceRegistry {
 		for (ServiceDecoratorOptionsImpl decorateOptions : binder.getDecoratorList()) {
 			String serviceId = getServiceId(decorateOptions);
 			if (decoratorMap.containsKey(serviceId)) {
-				throw new IocException("Duplicate override for serviceId '%s'", serviceId);
+				throw new IocException("Duplicate decorator for serviceId '%s'", serviceId);
 			}
 			decoratorMap.put(serviceId, decorateOptions);
 		}
@@ -192,15 +192,18 @@ public class ServiceRegistryImpl implements ServiceRegistry {
 		if (options.getServiceId() != null) {
 			return options.getServiceId();
 		}
-		String simpleName = options.getServiceType().getSimpleName();
-		return Character.toLowerCase(simpleName.charAt(0)) + simpleName.substring(1);
+		return getDefaultServiceId(options.getServiceType());
 	}
 	
 	protected String getServiceId(ServiceDecoratorOptionsImpl options) {
 		if (options.getServiceId() != null) {
 			return options.getServiceId();
 		}
-		String simpleName = options.getServiceType().getSimpleName();
+		return getDefaultServiceId(options.getServiceType());
+	}
+	
+	static String getDefaultServiceId(Class<?> serviceType) {
+		String simpleName = serviceType.getSimpleName();
 		return Character.toLowerCase(simpleName.charAt(0)) + simpleName.substring(1);
 	}
 }

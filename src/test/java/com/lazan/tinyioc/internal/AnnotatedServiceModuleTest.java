@@ -57,4 +57,33 @@ public class AnnotatedServiceModuleTest {
 		assertEquals(1000, registry.getService(Integer.class).intValue());
 		assertEquals(1200, registry.getService(Long.class).longValue());
 	}
+	
+	public static class DecoratorModule {
+		@Bind
+		public void bind(ServiceBinder binder) {
+			binder.bind(String.class, "foo").withServiceId("string1");
+			binder.bind(String.class, "bar").withServiceId("string2");
+			binder.bind(String.class, "baz").withServiceId("string3");
+		}
+		
+		@Decorate("string1")
+		public String decorateString1(@Named("string1") String string1) {
+			return string1 + "x";
+		}
+
+		@Decorate("string2")
+		public String decorateString2(@Named("string2") String string2, @Named("string3") String string3) {
+			return string2 + "y" + string3;
+		}
+	}
+	
+	
+	@Test
+	public void testDecorateNonUniqueServiceType() {
+		ServiceRegistry registry = new ServiceRegistryBuilder()
+				.withModule(new AnnotatedServiceModule(DecoratorModule.class))
+				.build();
+		assertEquals("foox", registry.getService("string1"));
+		assertEquals("barybaz", registry.getService("string2"));
+	}
 }
