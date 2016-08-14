@@ -255,7 +255,7 @@ public class ServiceRegistryTest {
 			buildRegistry(module1, module2, module2).getService(String.class);
 			fail();
 		} catch (IocException e) {
-			assertEquals("Duplicate override for serviceId 'string'", e.getMessage());
+			assertEquals("Duplicate decorator for serviceId 'string'", e.getMessage());
 		}
 		try {
 			buildRegistry(module2).getService(String.class);
