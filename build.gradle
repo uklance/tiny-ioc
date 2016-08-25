@@ -55,3 +55,12 @@ bintray {
 		}
 	}
 }
+
+test {
+	testLogging {
+		exceptionFormat = 'full'
+	}
+	beforeTest { TestDescriptor descriptor ->
+		logger.lifecycle("   Running: $descriptor")
+	}
+}

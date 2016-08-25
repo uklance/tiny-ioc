@@ -4,10 +4,9 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 
 import javax.inject.Named;
 
@@ -26,10 +25,40 @@ import com.lazan.tinyioc.annotations.Service;
 import com.lazan.tinyioc.annotations.ServiceOverride;
 
 public class AnnotatedServiceModule implements ServiceModule {
-	private static final Set<Class<?>> SUPPORTED_TYPES = new HashSet<>(Arrays.asList(Bind.class, Decorate.class, Service.class, ServiceOverride.class));
-	
 	private final Class<?> moduleType;
+	
+	private static Map<Class<? extends Annotation>, AnnotationHandler> HANDLERS = new HashMap<>();
+	static {
+		HANDLERS.put(Bind.class, new AnnotationHandler() {
+			@Override
+			public void handle(AnnotatedServiceModule module, Object instance, Method method, ServiceBinder binder) {
+				module.bind(instance, method, binder);
+			}
+		});
+		HANDLERS.put(Service.class, new AnnotationHandler() {
+			@Override
+			public void handle(AnnotatedServiceModule module, Object instance, Method method, ServiceBinder binder) {
+				module.service(instance, method, binder);
+			}
+		});
+		HANDLERS.put(ServiceOverride.class, new AnnotationHandler() {
+			@Override
+			public void handle(AnnotatedServiceModule module, Object instance, Method method, ServiceBinder binder) {
+				module.serviceOverride(instance, method, binder);
+			}
+		});
+		HANDLERS.put(Decorate.class, new AnnotationHandler() {
+			@Override
+			public void handle(AnnotatedServiceModule module, Object instance, Method method, ServiceBinder binder) {
+				module.decorate(instance, method, binder);
+			}
+		});
+	}
 
+	private static interface AnnotationHandler {
+		void handle(AnnotatedServiceModule module, Object instance, Method method, ServiceBinder binder);
+	}
+	
 	public AnnotatedServiceModule(Class<?> moduleType) {
 		super();
 		this.moduleType = moduleType;
@@ -41,7 +70,7 @@ public class AnnotatedServiceModule implements ServiceModule {
 		for (Method method : moduleType.getMethods()) {
 			List<Annotation> anns = new ArrayList<>();
 			for (Annotation ann : method.getAnnotations()) {
-				if (SUPPORTED_TYPES.contains(ann.annotationType())) {
+				if (HANDLERS.containsKey(ann.annotationType())) {
 					anns.add(ann);
 				}
 			}
@@ -52,20 +81,12 @@ public class AnnotatedServiceModule implements ServiceModule {
 				Object instance = getInstance(instanceRef, method);
 				Annotation ann = anns.get(0);
 				Class<? extends Annotation> annType = ann.annotationType();
-				if (annType.equals(Bind.class)) {
-					bind(instance, method, binder); 
-				} else if (annType.equals(Service.class)) {
-					service(instance, method, binder);
-				} else if (annType.equals(ServiceOverride.class)) {
-					serviceOverride(instance, method, binder);
-				} else if (annType.equals(Decorate.class)) {
-					decorate(instance, method, binder);
-				}
+				HANDLERS.get(annType).handle(this, instance, method, binder);
 			}
 		}
 	}
 
-	private Object getInstance(Object[] instanceRef, Method method) {
+	protected Object getInstance(Object[] instanceRef, Method method) {
 		Object instance = null;
 		if (!Modifier.isStatic(method.getModifiers())) {
 			if (instanceRef[0] == null) {
@@ -129,7 +150,7 @@ public class AnnotatedServiceModule implements ServiceModule {
 	protected void decorate(Object instance, Method method, ServiceBinder binder) {
 		ServiceDecoratorOptions options = binder.decorate(method.getReturnType(), new ServiceDecorator() {
 			public Object decorate(Object delegate, ServiceBuilderContext context) {
-				Object[] params = getParameters(method, context, context.getServiceId(), delegate);
+				Object[] params = getParameters(method, context, true, delegate);
 				try {
 					return method.invoke(instance, params);
 				} catch (Exception e) {
@@ -153,11 +174,11 @@ public class AnnotatedServiceModule implements ServiceModule {
 	}
 	@SuppressWarnings("rawtypes")
 	protected Object[] getParameters(Method method, ServiceBuilderContext context) {
-		return getParameters(method, context, null, null);
+		return getParameters(method, context, false, null);
 	}
 	
 	@SuppressWarnings("rawtypes")
-	protected Object[] getParameters(Method method, ServiceBuilderContext context, String delegateId, Object delegate) {
+	protected Object[] getParameters(Method method, ServiceBuilderContext context, boolean delegateProvided, Object delegate) {
 		Class<?>[] paramTypes = method.getParameterTypes();
 		if (paramTypes.length == 0) {
 			return null;
@@ -170,9 +191,9 @@ public class AnnotatedServiceModule implements ServiceModule {
 			Named named = findAnnotation(paramAnnotations[i], Named.class);
 			boolean useDelegate = false;
 			Object param;
-			if (delegateId != null) {
+			if (delegateProvided) {
 				String paramId = named == null ? ServiceRegistryImpl.getDefaultServiceId(paramType) : named.value();
-				useDelegate = delegateId.equals(paramId);
+				useDelegate = context.getServiceId().equals(paramId);
 			}
 			if (useDelegate) {
 				param = delegate;
