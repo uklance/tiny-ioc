@@ -68,19 +68,18 @@ public class AnnotatedServiceModule implements ServiceModule {
 	public void bind(ServiceBinder binder) {
 		Object[] instanceRef = new Object[1];
 		for (Method method : moduleType.getMethods()) {
-			List<Annotation> anns = new ArrayList<>();
+			Annotation handleMe = null;
 			for (Annotation ann : method.getAnnotations()) {
 				if (HANDLERS.containsKey(ann.annotationType())) {
-					anns.add(ann);
+					if (handleMe != null) {
+						throw new IocException("Found %s and %s on %s.%s", handleMe.annotationType(), ann.annotationType(), moduleType.getName(), method.getName());
+					}
+					handleMe = ann;
 				}
 			}
-			if (anns.size() > 1) {
-				throw new IocException("Found %s supported annotations on %s.%s", anns.size(), moduleType.getName(), method.getName());
-			}
-			if (anns.size() == 1) {
+			if (handleMe != null) {
 				Object instance = getInstance(instanceRef, method);
-				Annotation ann = anns.get(0);
-				Class<? extends Annotation> annType = ann.annotationType();
+				Class<? extends Annotation> annType = handleMe.annotationType();
 				HANDLERS.get(annType).handle(this, instance, method, binder);
 			}
 		}
