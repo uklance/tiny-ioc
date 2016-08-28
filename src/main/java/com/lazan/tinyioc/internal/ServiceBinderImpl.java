@@ -3,6 +3,7 @@ package com.lazan.tinyioc.internal;
 import java.util.LinkedList;
 import java.util.List;
 
+import com.lazan.tinyioc.OrderedContributionOptions;
 import com.lazan.tinyioc.ServiceBinder;
 import com.lazan.tinyioc.ServiceBinderOptions;
 import com.lazan.tinyioc.ServiceBuilder;
@@ -13,6 +14,9 @@ public class ServiceBinderImpl implements ServiceBinder {
 	private List<ServiceBinderOptionsImpl> bindList = new LinkedList<>();
 	private List<ServiceBinderOptionsImpl> overrideList = new LinkedList<>();
 	private List<ServiceDecoratorOptionsImpl> decoratorList = new LinkedList<>(); 
+	private List<UnorderedContributionOptionsImpl> unorderedContributions = new LinkedList<>();
+	private List<OrderedContributionOptionsImpl> orderedContributions = new LinkedList<>();
+	private List<MappedContributionOptionsImpl> mappedContributions = new LinkedList<>();
 	
 	@Override
 	public <T> ServiceBinderOptions bind(Class<T> serviceType) {
@@ -59,6 +63,25 @@ public class ServiceBinderImpl implements ServiceBinder {
 		decoratorList.add(options);
 		return options;
 	}
+
+	@Override
+	public void mappedContribution(String serviceId, String contributionId, Object key, Object value) {
+		MappedContributionOptionsImpl options = new MappedContributionOptionsImpl(serviceId, contributionId, key, value);
+		mappedContributions.add(options);
+	}
+	
+	@Override
+	public OrderedContributionOptions orderedContribution(String serviceId, String contributionId, Object value) {
+		OrderedContributionOptionsImpl options = new OrderedContributionOptionsImpl(serviceId, contributionId, value);
+		orderedContributions.add(options);
+		return options;
+	}
+	
+	@Override
+	public void unorderedContribution(String serviceId, String contributionId, Object value) {
+		UnorderedContributionOptionsImpl options = new UnorderedContributionOptionsImpl(serviceId, contributionId, value);
+		unorderedContributions.add(options);
+	}
 	
 	public List<ServiceBinderOptionsImpl> getBindList() {
 		return bindList;
@@ -70,5 +93,17 @@ public class ServiceBinderImpl implements ServiceBinder {
 	
 	public List<ServiceDecoratorOptionsImpl> getDecoratorList() {
 		return decoratorList;
+	}
+	
+	public List<OrderedContributionOptionsImpl> getOrderedContributions() {
+		return orderedContributions;
+	}
+	
+	public List<UnorderedContributionOptionsImpl> getUnorderedContributions() {
+		return unorderedContributions;
+	}
+	
+	public List<MappedContributionOptionsImpl> getMappedContributions() {
+		return mappedContributions;
 	}
 }

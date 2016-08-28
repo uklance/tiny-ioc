@@ -9,6 +9,7 @@ import static org.junit.Assert.fail;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -284,5 +285,68 @@ public class ServiceRegistryTest {
 				.getService(String.class);
 		
 		assertEquals("foo", string);
+	}
+	
+	public static class MapBean {
+		private final Map<String, String> map;
+
+		public MapBean(Map<String, String> map) {
+			super();
+			this.map = map;
+		}
+		
+		public Map<String, String> getMap() {
+			return map;
+		}
+	}
+	
+	public static class ListBean {
+		private final List<String> list;
+
+		public ListBean(List<String> list) {
+			super();
+			this.list = list;
+		}
+		
+		public List<String> getList() {
+			return list;
+		}
+	}
+	
+	@Test
+	public void testContributions() {
+		ServiceModule module = new ServiceModule() {
+			@Override
+			public void bind(ServiceBinder binder) {
+				binder.bind(MapBean.class, new ServiceBuilder<MapBean>() {
+					@Override
+					public MapBean build(ServiceBuilderContext<MapBean> context) {
+						return new MapBean(context.getMappedContributions());
+					}
+				}).withMappedContribution(String.class, String.class);
+				binder.bind(ListBean.class, new ServiceBuilder<ListBean>() {
+					@Override
+					public ListBean build(ServiceBuilderContext<ListBean> context) {
+						return new ListBean(context.getOrderedContributions());
+					}
+				}).withOrderedContribution(String.class);
+				binder.mappedContribution("mapBean", "c1", "key1", "value1");
+				binder.mappedContribution("mapBean", "c2", "key2", "value2");
+				binder.orderedContribution("listBean", "c3", "value3");
+				binder.orderedContribution("listBean", "c4", "value4").before("c3");
+				binder.orderedContribution("listBean", "c5", "value5").after("*");
+				binder.orderedContribution("listBean", "c6", "value6").after("c4");
+			}
+		};
+		ServiceRegistry registry = buildRegistry(module);
+
+		MapBean mapBean = registry.getService(MapBean.class);
+		Map<String, String> expectedMap = new HashMap<>();
+		expectedMap.put("key1", "value1");
+		expectedMap.put("key2", "value2");
+		assertEquals(expectedMap, mapBean.getMap());
+
+		ListBean listBean = registry.getService(ListBean.class);
+		assertEquals(Arrays.asList("value4", "value3", "value6", "value5"), listBean.getList());
 	}
 }

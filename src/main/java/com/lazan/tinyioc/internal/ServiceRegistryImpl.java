@@ -30,7 +30,11 @@ public class ServiceRegistryImpl implements ServiceRegistry {
 		}
 		
 		Map<String, ServiceBinderOptionsImpl> overrideMap = createOverrideMap(binder);
-		Map<String, ServiceDecoratorOptionsImpl> decoratorMap = createDecoratorMap(binder);	
+		Map<String, ServiceDecoratorOptionsImpl> decoratorMap = createDecoratorMap(binder);
+		
+		Map<String, List<UnorderedContributionOptionsImpl>> unorderedContributionMap = groupByServiceId(binder.getUnorderedContributions());
+		Map<String, List<OrderedContributionOptionsImpl>> orderedContributionMap = groupByServiceId(binder.getOrderedContributions());
+		Map<String, List<MappedContributionOptionsImpl>> mappedContributionMap = groupByServiceId(binder.getMappedContributions());
 		
 		for (ServiceBinderOptionsImpl candidate : binder.getBindList()) {
 			String serviceId = getServiceId(candidate);
@@ -41,9 +45,15 @@ public class ServiceRegistryImpl implements ServiceRegistry {
 			ServiceBuilder<?> overrideBuilder = getOverrideServiceBuilder(serviceId, serviceType, overrideMap);
 			ServiceBuilder<?> builder = overrideBuilder == null ? candidate.getServiceBuilder() : overrideBuilder;
 			ServiceDecorator<?> decorator = getServiceDecorator(serviceId, serviceType, decoratorMap);
+			
+			List<UnorderedContributionOptionsImpl> unorderedContributions = unorderedContributionMap.get(serviceId);
+			List<OrderedContributionOptionsImpl> orderedContributions = orderedContributionMap.get(serviceId);
+			List<MappedContributionOptionsImpl> mappedContributions = mappedContributionMap.get(serviceId);
 
 			@SuppressWarnings({"unchecked", "rawtypes"})
-			ServiceReference<?> reference = new ServiceReference(serviceId, serviceType, builder, decorator);
+			ServiceReference<?> reference = new ServiceReference(serviceId, serviceType, builder, decorator, 
+					candidate.getContributionType(), candidate.getContributionKeyType(), candidate.getContributionValueType(), 
+					unorderedContributions, orderedContributions, mappedContributions);
 			_referencesById.put(serviceId, reference);
 
 			List<ServiceReference<?>> referenceList = _referencesByType.get(serviceType);
@@ -70,6 +80,19 @@ public class ServiceRegistryImpl implements ServiceRegistry {
 		referencesByType = Collections.unmodifiableMap(_referencesByType);
 	}
 	
+	private <T extends UnorderedContributionOptionsImpl> Map<String, List<T>> groupByServiceId(List<T> contributions) {
+		Map<String, List<T>> grouped = new LinkedHashMap<>();
+		for (T contribution : contributions) {
+			List<T> list = grouped.get(contribution.getServiceId());
+			if (list == null) {
+				list = new LinkedList<>();
+				grouped.put(contribution.getServiceId(), list);
+			}
+			list.add(contribution);
+		}
+		return grouped;
+	}
+
 	protected ServiceRegistryImpl(ServiceRegistryImpl registry, String serviceId) {
 		this.referencesById = registry.referencesById;
 		this.referencesByType = registry.referencesByType;
