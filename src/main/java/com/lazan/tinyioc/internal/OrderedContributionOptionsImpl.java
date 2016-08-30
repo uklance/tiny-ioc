@@ -34,14 +34,6 @@ public class OrderedContributionOptionsImpl extends UnorderedContributionOptions
 		return this;
 	}
 	
-	public Set<String> getBefore() {
-		return before == null ? Collections.emptySet() : before;
-	}
-	
-	public Set<String> getAfter() {
-		return after == null ? Collections.emptySet() : after;
-	}
-
 	@Override
 	public int compareTo(OrderedContributionOptionsImpl other) {
 		boolean isBefore = before != null && (before.contains(other.getContributionId()) || before.contains("*"));

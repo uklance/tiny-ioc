@@ -27,21 +27,22 @@ public class ServiceBuilderContextImpl<T> implements ServiceBuilderContext<T> {
 		this.serviceType = serviceType;
 	}
 	
-	void setOrderedConfiguration(Class<?> contributionValueType, List<Object> contributions) {
+	void setOrderedConfiguration(Class<?> valueType, List<Object> contributions) {
 		this.contributionType = ContributionType.ORDERED;
-		this.contributionValueType = contributionValueType;
+		this.contributionValueType = valueType;
 		this.orderedContributions = contributions;
 	}
 
-	void setUnorderedConfiguration(Class<?> contributionValueType, Collection<Object> contributions) {
+	void setUnorderedConfiguration(Class<?> valueType, Collection<Object> contributions) {
 		this.contributionType = ContributionType.UNORDERED;
-		this.contributionValueType = contributionValueType;
+		this.contributionValueType = valueType;
 		this.unorderedContributions = contributions;
 	}
 
-	void setMappedConfiguration(Class<?> contributionKeyType, Class<?> contributionValueType, Map<Object, Object> contributions) {
+	void setMappedConfiguration(Class<?> keyType, Class<?> valueType, Map<Object, Object> contributions) {
 		this.contributionType = ContributionType.MAPPED;
-		this.contributionValueType = contributionValueType;
+		this.contributionKeyType = keyType;
+		this.contributionValueType = valueType;
 		this.mappedContributions = contributions;
 	}
 	
@@ -67,19 +68,19 @@ public class ServiceBuilderContextImpl<T> implements ServiceBuilderContext<T> {
 	
 	@Override
 	public Map getMappedContributions() {
-		if (contributionType != ContributionType.MAPPED) throw new IocException("");
+		if (contributionType != ContributionType.MAPPED) throw new IocException("Cannot get mapped contributions for contribution type " + contributionType);
 		return mappedContributions;
 	}
 	
 	@Override
 	public List getOrderedContributions() {
-		if (contributionType != ContributionType.ORDERED) throw new IocException("");
+		if (contributionType != ContributionType.ORDERED) throw new IocException("Cannot get ordered contributions for contribution type " + contributionType);
 		return orderedContributions;
 	}
 	
 	@Override
 	public Collection getUnorderedContributions() {
-		if (contributionType != ContributionType.UNORDERED) throw new IocException("");
+		if (contributionType != ContributionType.UNORDERED) throw new IocException("Cannot get unordered contributions for contribution type " + contributionType);
 		return unorderedContributions;
 	}
 	

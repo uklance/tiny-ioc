@@ -34,18 +34,18 @@ public class ServiceBinderOptionsImpl implements ServiceBinderOptions {
 	}
 	
 	@Override
-	public ServiceBinderOptions withOrderedContribution(Class<?> contributionType) {
-		if (this.contributionType != null) throw new IocException("Multiple contribution types specified");
-		this.contributionType = ContributionType.ORDERED;
-		this.contributionValueType = contributionType;
+	public ServiceBinderOptions withOrderedContribution(Class<?> valueType) {
+		if (contributionType != null) throw new IocException("Multiple contribution types specified");
+		contributionType = ContributionType.ORDERED;
+		contributionValueType = valueType;
 		return this;
 	}
 	
 	@Override
-	public ServiceBinderOptions withUnorderedContribution(Class<?> contributionType) {
+	public ServiceBinderOptions withUnorderedContribution(Class<?> valueType) {
 		if (contributionType != null) throw new IocException("Multiple contribution types specified");
-		this.contributionType = ContributionType.UNORDERED;
-		this.contributionValueType = contributionType;
+		contributionType = ContributionType.UNORDERED;
+		contributionValueType = valueType;
 		return this;
 	}
 	

@@ -7,6 +7,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -17,6 +18,8 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.junit.Test;
+
+import com.lazan.tinyioc.internal.ContributionType;
 
 public class ServiceRegistryTest {
 	public static class Child {}
@@ -313,6 +316,20 @@ public class ServiceRegistryTest {
 		}
 	}
 	
+	public static class CollectionBean {
+		private final Collection<String> collection;
+
+		public CollectionBean(Collection<String> collection) {
+			super();
+			this.collection = collection;
+		}
+		
+		public Collection<String> getCollection() {
+			return collection;
+		}
+	}
+	
+	@SuppressWarnings("unchecked")
 	@Test
 	public void testContributions() {
 		ServiceModule module = new ServiceModule() {
@@ -321,21 +338,37 @@ public class ServiceRegistryTest {
 				binder.bind(MapBean.class, new ServiceBuilder<MapBean>() {
 					@Override
 					public MapBean build(ServiceBuilderContext<MapBean> context) {
+						assertEquals(ContributionType.MAPPED, context.getContributionType());
+						assertEquals(String.class, context.getContributionKeyType());
+						assertEquals(String.class, context.getContributionValueType());
 						return new MapBean(context.getMappedContributions());
 					}
 				}).withMappedContribution(String.class, String.class);
 				binder.bind(ListBean.class, new ServiceBuilder<ListBean>() {
 					@Override
 					public ListBean build(ServiceBuilderContext<ListBean> context) {
+						assertEquals(ContributionType.ORDERED, context.getContributionType());
+						assertEquals(String.class, context.getContributionValueType());
 						return new ListBean(context.getOrderedContributions());
 					}
 				}).withOrderedContribution(String.class);
+				binder.bind(CollectionBean.class, new ServiceBuilder<CollectionBean>() {
+					@Override
+					public CollectionBean build(ServiceBuilderContext<CollectionBean> context) {
+						assertEquals(ContributionType.UNORDERED, context.getContributionType());
+						assertEquals(String.class, context.getContributionValueType());
+						return new CollectionBean(context.getUnorderedContributions());
+					}
+				}).withUnorderedContribution(String.class); 
 				binder.mappedContribution("mapBean", "c1", "key1", "value1");
 				binder.mappedContribution("mapBean", "c2", "key2", "value2");
 				binder.orderedContribution("listBean", "c3", "value3");
 				binder.orderedContribution("listBean", "c4", "value4").before("c3");
 				binder.orderedContribution("listBean", "c5", "value5").after("*");
 				binder.orderedContribution("listBean", "c6", "value6").after("c4");
+				binder.unorderedContribution("collectionBean", "value6", "c6");
+				binder.unorderedContribution("collectionBean", "value7", "c7");
+				binder.unorderedContribution("collectionBean", "value8", "c8");
 			}
 		};
 		ServiceRegistry registry = buildRegistry(module);
@@ -348,5 +381,8 @@ public class ServiceRegistryTest {
 
 		ListBean listBean = registry.getService(ListBean.class);
 		assertEquals(Arrays.asList("value4", "value3", "value6", "value5"), listBean.getList());
+		
+		CollectionBean collectionBean = registry.getService(CollectionBean.class);
+		assertEquals(Arrays.asList("c6","c7","c8"), collectionBean.getCollection());
 	}
 }
