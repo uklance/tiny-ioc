@@ -71,6 +71,11 @@ public class ServiceBinderImpl implements ServiceBinder {
 	}
 	
 	@Override
+	public void mappedContribution(Class<?> serviceType, String contributionId, Object key, Object value) {
+		mappedContribution(ServiceRegistryImpl.getDefaultServiceId(serviceType), contributionId, key, value);
+	}
+	
+	@Override
 	public OrderedContributionOptions orderedContribution(String serviceId, String contributionId, Object value) {
 		OrderedContributionOptionsImpl options = new OrderedContributionOptionsImpl(serviceId, contributionId, value);
 		orderedContributions.add(options);
@@ -78,9 +83,19 @@ public class ServiceBinderImpl implements ServiceBinder {
 	}
 	
 	@Override
+	public OrderedContributionOptions orderedContribution(Class<?> serviceType, String contributionId, Object value) {
+		return orderedContribution(ServiceRegistryImpl.getDefaultServiceId(serviceType), contributionId, value);
+	}
+	
+	@Override
 	public void unorderedContribution(String serviceId, String contributionId, Object value) {
 		UnorderedContributionOptionsImpl options = new UnorderedContributionOptionsImpl(serviceId, contributionId, value);
 		unorderedContributions.add(options);
+	}
+	
+	@Override
+	public void unorderedContribution(Class<?> serviceType, String contributionId, Object value) {
+		unorderedContribution(ServiceRegistryImpl.getDefaultServiceId(serviceType), contributionId, value);
 	}
 	
 	public List<ServiceBinderOptionsImpl> getBindList() {

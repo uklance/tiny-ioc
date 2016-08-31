@@ -10,6 +10,9 @@ public interface ServiceBinder {
 	<T> ServiceBinderOptions override(Class<T> serviceType, ServiceBuilder<? extends T> builder);
 	<T> ServiceDecoratorOptions decorate(Class<T> serviceType, ServiceDecorator<? extends T> decorator);
 	void unorderedContribution(String serviceId, String contributionId, Object value);
+	void unorderedContribution(Class<?> serviceType, String contributionId, Object value);
 	OrderedContributionOptions orderedContribution(String serviceId, String contributionId, Object value);
+	OrderedContributionOptions orderedContribution(Class<?> serviceType, String contributionId, Object value);
 	void mappedContribution(String serviceId, String contributionId, Object key, Object value);
+	void mappedContribution(Class<?> serviceType, String contributionId, Object key, Object value);
 }

@@ -362,14 +362,14 @@ public class ServiceRegistryTest {
 					}
 				}).withUnorderedContribution(String.class); 
 				binder.mappedContribution("mapBean", "c1", "key1", "value1");
-				binder.mappedContribution("mapBean", "c2", "key2", "value2");
+				binder.mappedContribution(MapBean.class, "c2", "key2", "value2");
 				binder.orderedContribution("listBean", "c3", "value3");
 				binder.orderedContribution("listBean", "c4", "value4").before("c3");
 				binder.orderedContribution("listBean", "c5", "value5").after("*");
-				binder.orderedContribution("listBean", "c6", "value6").after("c4");
+				binder.orderedContribution(ListBean.class, "c6", "value6").after("c4");
 				binder.unorderedContribution("collectionBean", "value6", "c6");
 				binder.unorderedContribution("collectionBean", "value7", "c7");
-				binder.unorderedContribution("collectionBean", "value8", "c8");
+				binder.unorderedContribution(CollectionBean.class, "value8", "c8");
 			}
 		};
 		ServiceRegistry registry = buildRegistry(module);
