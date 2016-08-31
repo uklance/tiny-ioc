@@ -14,6 +14,7 @@ import com.lazan.tinyioc.ServiceDecorator;
 
 public class ServiceReference<T> {
 	public class ServiceDependencies {
+		private final Class<T> serviceType;
 		private final ServiceBuilder<T> builder;
 		private final ServiceDecorator<T> decorator;
 		private final ContributionType contributionType;
@@ -22,12 +23,13 @@ public class ServiceReference<T> {
 		private final List<UnorderedContributionOptionsImpl> unorderedContributions;
 		private final List<OrderedContributionOptionsImpl> orderedContributions;
 		private final List<MappedContributionOptionsImpl> mappedContributions;
-		public ServiceDependencies(ServiceBuilder<T> builder, ServiceDecorator<T> decorator,
+		public ServiceDependencies(Class<T> serviceType, ServiceBuilder<T> builder, ServiceDecorator<T> decorator,
 				ContributionType contributionType, Class<?> contributionKeyType, Class<?> contributionValueType,
 				List<UnorderedContributionOptionsImpl> unorderedContributions,
 				List<OrderedContributionOptionsImpl> orderedContributions,
 				List<MappedContributionOptionsImpl> mappedContributions) {
 			super();
+			this.serviceType = serviceType;
 			this.builder = builder;
 			this.decorator = decorator;
 			this.contributionType = contributionType;
@@ -40,7 +42,6 @@ public class ServiceReference<T> {
 	}
 	
 	private final String serviceId;
-	private final Class<T> serviceType;
 	private ServiceDependencies dependencies;
 	private volatile Object service;
 	
@@ -51,8 +52,7 @@ public class ServiceReference<T> {
 			List<MappedContributionOptionsImpl> mappedContributions) {
 		super();
 		this.serviceId = serviceId;
-		this.serviceType = serviceType;
-		this.dependencies = new ServiceDependencies(builder, decorator, contributionType, contributionKeyType, contributionValueType, unorderedContributions, orderedContributions, mappedContributions);
+		this.dependencies = new ServiceDependencies(serviceType, builder, decorator, contributionType, contributionKeyType, contributionValueType, unorderedContributions, orderedContributions, mappedContributions);
 	}
 
 	public synchronized Object get(ServiceRegistryImpl registry) {
@@ -64,7 +64,7 @@ public class ServiceReference<T> {
 				throw new IocException("Circular dependency reference detected %s", references);
 			}
 			ServiceRegistryImpl registryWrapper = new ServiceRegistryImpl(registry, serviceId);
-			ServiceBuilderContextImpl<T> context = new ServiceBuilderContextImpl<T>(registryWrapper, serviceId, serviceType);
+			ServiceBuilderContextImpl<T> context = new ServiceBuilderContextImpl<T>(registryWrapper, serviceId, dependencies.serviceType);
 			
 			if (dependencies.contributionType != null) {
 				switch (dependencies.contributionType) {
@@ -123,9 +123,5 @@ public class ServiceReference<T> {
 
 	public String getServiceId() {
 		return serviceId;
-	}
-	
-	public Class<T> getServiceType() {
-		return serviceType;
 	}
 }

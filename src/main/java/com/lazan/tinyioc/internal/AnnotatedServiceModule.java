@@ -92,7 +92,7 @@ public class AnnotatedServiceModule implements ServiceModule {
 				try {
 					instanceRef[0] = moduleType.newInstance();
 				} catch (Exception e) {
-					throw new IocException(e, "Error instantiating annotated class");
+					throw new IocException(e, "Error instantiating %s", moduleType.getSimpleName());
 				}
 			}
 			instance = instanceRef[0];

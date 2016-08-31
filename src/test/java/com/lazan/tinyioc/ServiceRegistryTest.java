@@ -19,6 +19,7 @@ import javax.inject.Named;
 
 import org.junit.Test;
 
+import com.lazan.tinyioc.annotations.Bind;
 import com.lazan.tinyioc.internal.ContributionType;
 
 public class ServiceRegistryTest {
@@ -273,8 +274,8 @@ public class ServiceRegistryTest {
 		return new ServiceRegistryBuilder().withModules(modules).build();
 	}
 	
-	public static class TestModule implements ServiceModule {
-		@Override
+	public static class TestModule {
+		@Bind
 		public void bind(ServiceBinder binder) {
 			binder.bind(String.class, "foo");
 		}

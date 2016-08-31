@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
+import com.lazan.tinyioc.internal.AnnotatedServiceModule;
 import com.lazan.tinyioc.internal.ServiceRegistryImpl;
 
 public class ServiceRegistryBuilder {
@@ -16,7 +17,7 @@ public class ServiceRegistryBuilder {
 	
 	public ServiceRegistryBuilder withModules(Iterable<ServiceModule> modules) {
 		for (ServiceModule module : modules) {
-			this.modules.add(module);
+			withModule(module);
 		}
 		return this;
 	}
@@ -25,20 +26,15 @@ public class ServiceRegistryBuilder {
 		return withModules(Arrays.asList(modules));
 	}
 	
-	public ServiceRegistryBuilder withModuleType(Class<? extends ServiceModule> moduleType) {
-		return withModuleTypes(Arrays.asList(moduleType));
+	public ServiceRegistryBuilder withModuleType(Class<?> moduleType) {
+		return withModule(new AnnotatedServiceModule(moduleType));
 	}
 	
-	public ServiceRegistryBuilder withModuleTypes(Iterable<Class<? extends ServiceModule>> moduleTypes) {
-		List<ServiceModule> modules = new LinkedList<>();
-		for (Class<? extends ServiceModule> moduleType : moduleTypes) {
-			try {
-				modules.add(moduleType.newInstance());
-			} catch (Exception e) {
-				throw new IocException(e, "Error instantiating %s", moduleType.getSimpleName());
-			}
+	public ServiceRegistryBuilder withModuleTypes(Iterable<Class<?>> moduleTypes) {
+		for (Class<?> moduleType : moduleTypes) {
+			withModuleType(moduleType);
 		}
-		return withModules(modules);
+		return this;
 	}
 	
 	public ServiceRegistry build() {

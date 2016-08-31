@@ -1,6 +1,7 @@
 package com.lazan.tinyioc.internal;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 import java.sql.Date;
 
@@ -8,6 +9,7 @@ import javax.inject.Named;
 
 import org.junit.Test;
 
+import com.lazan.tinyioc.IocException;
 import com.lazan.tinyioc.ServiceBinder;
 import com.lazan.tinyioc.ServiceRegistry;
 import com.lazan.tinyioc.ServiceRegistryBuilder;
@@ -85,5 +87,26 @@ public class AnnotatedServiceModuleTest {
 				.build();
 		assertEquals("foox", registry.getService("string1"));
 		assertEquals("barybaz", registry.getService("string2"));
+	}
+	
+	public static class ErrorModule1 {
+		public ErrorModule1(String foo) {}
+		
+		@Service
+		public String service1() {
+			return "service1";
+		}
+	}
+	
+	@Test
+	public void testBadConstructor() {
+		try {
+			new ServiceRegistryBuilder()
+					.withModule(new AnnotatedServiceModule(ErrorModule1.class))
+					.build();	
+			fail();
+		} catch (IocException e) {
+			assertEquals("Error instantiating ErrorModule1", e.getMessage());
+		}
 	}
 }
