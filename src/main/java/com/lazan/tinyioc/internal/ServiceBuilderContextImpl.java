@@ -68,19 +68,19 @@ public class ServiceBuilderContextImpl implements ServiceBuilderContext {
 	
 	@Override
 	public <K, V> Map<K, V> getMappedContributions(Class<K> keyType, Class<V> valueType) {
-		if (contributionType != ContributionType.MAPPED) throw new IocException("Cannot get mapped contributions for contribution type " + contributionType);
+		if (contributionType != ContributionType.MAPPED) throw new IocException("Cannot get mapped contributions for service %s (contributionType=%s)", serviceId, contributionType);
 		return mappedContributions;
 	}
 	
 	@Override
 	public <V> List<V> getOrderedContributions(Class<V> valueType) {
-		if (contributionType != ContributionType.ORDERED) throw new IocException("Cannot get ordered contributions for contribution type " + contributionType);
+		if (contributionType != ContributionType.ORDERED) throw new IocException("Cannot get ordered contributions for service %s (contributionType=%s)", serviceId, contributionType);
 		return orderedContributions;
 	}
 	
 	@Override
 	public <V> Collection<V> getUnorderedContributions(Class<V> valueType) {
-		if (contributionType != ContributionType.UNORDERED) throw new IocException("Cannot get unordered contributions for contribution type " + contributionType);
+		if (contributionType != ContributionType.UNORDERED) throw new IocException("Cannot get unordered contributions for service %s (contributionType=%s)", serviceId, contributionType);
 		return unorderedContributions;
 	}
 	
