@@ -6,15 +6,14 @@ import java.util.Map;
 
 import com.lazan.tinyioc.internal.ContributionType;
 
-@SuppressWarnings("rawtypes")
-public interface ServiceBuilderContext<T> {
+public interface ServiceBuilderContext {
 	String getServiceId();
-	Class<T> getServiceType();
+	Class<?> getServiceType();
 	ServiceRegistry getServiceRegistry();
 	ContributionType getContributionType();
-	Map getMappedContributions();
-	Collection getUnorderedContributions();
-	List getOrderedContributions();
+	<K, V> Map<K, V> getMappedContributions(Class<K> keyType, Class<V> valueType);
+	<V> Collection<V> getUnorderedContributions(Class<V> valueType);
+	<V> List<V> getOrderedContributions(Class<V> valueType);
 	Class<?> getContributionKeyType();
 	Class<?> getContributionValueType();
 }

@@ -18,8 +18,6 @@ import org.mockito.runners.MockitoJUnitRunner;
 import com.lazan.tinyioc.IocException;
 import com.lazan.tinyioc.ServiceBuilderContext;
 import com.lazan.tinyioc.ServiceRegistry;
-import com.lazan.tinyioc.internal.InjectionServiceBuilder;
-import com.lazan.tinyioc.internal.ServiceBuilderContextImpl;
 
 @RunWith(MockitoJUnitRunner.class)
 public class InjectionServiceBuilderTest {
@@ -148,7 +146,7 @@ public class InjectionServiceBuilderTest {
 	}
 	
 	private <T> T build(Class<T> type) {
-		ServiceBuilderContext<T> context = new ServiceBuilderContextImpl<>(registry, null, type);
+		ServiceBuilderContext context = new ServiceBuilderContextImpl(registry, "testService", type);
 		return new InjectionServiceBuilder<>(type).build(context);
 	}
 }

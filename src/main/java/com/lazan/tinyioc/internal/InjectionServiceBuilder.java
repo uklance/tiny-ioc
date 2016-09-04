@@ -22,7 +22,7 @@ public class InjectionServiceBuilder<T> implements ServiceBuilder<T> {
 	}
 
 	@Override
-	public T build(ServiceBuilderContext<T> context) {
+	public T build(ServiceBuilderContext context) {
 		try {
 			Constructor<T> constructor = findConstructor(concreteType);
 			Object[] params = getParameters(constructor, context);
@@ -36,7 +36,7 @@ public class InjectionServiceBuilder<T> implements ServiceBuilder<T> {
 		}
 	}
 	
-	protected Object[] getParameters(Constructor<T> constructor, ServiceBuilderContext<T> context) {
+	protected Object[] getParameters(Constructor<T> constructor, ServiceBuilderContext context) {
 		Class[] paramTypes = constructor.getParameterTypes();
 		if (paramTypes.length == 0) {
 			return null;
@@ -48,7 +48,7 @@ public class InjectionServiceBuilder<T> implements ServiceBuilder<T> {
 		return params;
 	}
 
-	protected Object getParameter(Constructor<T> constructor, int paramIndex, ServiceBuilderContext<T> context) {
+	protected Object getParameter(Constructor<T> constructor, int paramIndex, ServiceBuilderContext context) {
 		Class<?> paramType = constructor.getParameterTypes()[paramIndex];
 		Annotation[] annotations = constructor.getParameterAnnotations()[paramIndex];
 		ServiceRegistry registry = context.getServiceRegistry();
@@ -96,7 +96,7 @@ public class InjectionServiceBuilder<T> implements ServiceBuilder<T> {
 		throw new IocException("Found %s public constructors annotated with javax.inject.Inject for type %s", injectCount, concreteType.getName());
 	}
 
-	protected void injectFields(T service, ServiceBuilderContext<T> context) {
+	protected void injectFields(T service, ServiceBuilderContext context) {
 		Class<?> currentType = context.getServiceType();
 		ServiceRegistry registry = context.getServiceRegistry();
 		while (currentType != null){ 

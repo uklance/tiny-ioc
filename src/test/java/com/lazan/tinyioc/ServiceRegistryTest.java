@@ -222,7 +222,7 @@ public class ServiceRegistryTest {
 		}
 		
 		@Override
-		public String decorate(String delegate, ServiceBuilderContext<String> context) {
+		public String decorate(String delegate, ServiceBuilderContext context) {
 			return String.format(pattern, delegate);
 		}
 	}
@@ -330,7 +330,6 @@ public class ServiceRegistryTest {
 		}
 	}
 	
-	@SuppressWarnings("unchecked")
 	@Test
 	public void testContributions() {
 		ServiceModule module = new ServiceModule() {
@@ -338,27 +337,27 @@ public class ServiceRegistryTest {
 			public void bind(ServiceBinder binder) {
 				binder.bind(MapBean.class, new ServiceBuilder<MapBean>() {
 					@Override
-					public MapBean build(ServiceBuilderContext<MapBean> context) {
+					public MapBean build(ServiceBuilderContext context) {
 						assertEquals(ContributionType.MAPPED, context.getContributionType());
 						assertEquals(String.class, context.getContributionKeyType());
 						assertEquals(String.class, context.getContributionValueType());
-						return new MapBean(context.getMappedContributions());
+						return new MapBean(context.getMappedContributions(String.class, String.class));
 					}
 				}).withMappedContribution(String.class, String.class);
 				binder.bind(ListBean.class, new ServiceBuilder<ListBean>() {
 					@Override
-					public ListBean build(ServiceBuilderContext<ListBean> context) {
+					public ListBean build(ServiceBuilderContext context) {
 						assertEquals(ContributionType.ORDERED, context.getContributionType());
 						assertEquals(String.class, context.getContributionValueType());
-						return new ListBean(context.getOrderedContributions());
+						return new ListBean(context.getOrderedContributions(String.class));
 					}
 				}).withOrderedContribution(String.class);
 				binder.bind(CollectionBean.class, new ServiceBuilder<CollectionBean>() {
 					@Override
-					public CollectionBean build(ServiceBuilderContext<CollectionBean> context) {
+					public CollectionBean build(ServiceBuilderContext context) {
 						assertEquals(ContributionType.UNORDERED, context.getContributionType());
 						assertEquals(String.class, context.getContributionValueType());
-						return new CollectionBean(context.getUnorderedContributions());
+						return new CollectionBean(context.getUnorderedContributions(String.class));
 					}
 				}).withUnorderedContribution(String.class); 
 				binder.mappedContribution("mapBean", "c1", "key1", "value1");

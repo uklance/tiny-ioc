@@ -1,14 +1,16 @@
 package com.lazan.tinyioc.internal;
 
-public class MappedContributionOptionsImpl extends UnorderedContributionOptionsImpl {
-	private final Object key;
+import com.lazan.tinyioc.ServiceBuilder;
 
-	public MappedContributionOptionsImpl(String serviceId, String contributionId, Object key, Object value) {
-		super(serviceId, contributionId, value);
-		this.key = key;
+public class MappedContributionOptionsImpl extends UnorderedContributionOptionsImpl {
+	private final ServiceBuilder<?> keyBuilder;
+
+	public MappedContributionOptionsImpl(String serviceId, String contributionId, ServiceBuilder<?> keyBuilder, ServiceBuilder<?> valueBuilder) {
+		super(serviceId, contributionId, valueBuilder);
+		this.keyBuilder = keyBuilder;
 	}
 	
-	public Object getKey() {
-		return key;
+	public ServiceBuilder<?> getKeyBuilder() {
+		return keyBuilder;
 	}
 }

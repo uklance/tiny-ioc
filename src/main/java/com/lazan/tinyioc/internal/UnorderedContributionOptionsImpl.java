@@ -1,15 +1,17 @@
 package com.lazan.tinyioc.internal;
 
+import com.lazan.tinyioc.ServiceBuilder;
+
 public class UnorderedContributionOptionsImpl {
 	private final String serviceId;
 	private final String contributionId;
-	private final Object value;
+	private final ServiceBuilder<?> valueBuilder;
 	
-	public UnorderedContributionOptionsImpl(String serviceId, String contributionId, Object value) {
+	public UnorderedContributionOptionsImpl(String serviceId, String contributionId, ServiceBuilder<?> valueBuilder) {
 		super();
 		this.serviceId = serviceId;
 		this.contributionId = contributionId;
-		this.value = value;
+		this.valueBuilder = valueBuilder;
 	}
 
 	public String getServiceId() {
@@ -19,8 +21,8 @@ public class UnorderedContributionOptionsImpl {
 	public String getContributionId() {
 		return contributionId;
 	}
-
-	public Object getValue() {
-		return value;
+	
+	public ServiceBuilder<?> getValueBuilder() {
+		return valueBuilder;
 	}
 }

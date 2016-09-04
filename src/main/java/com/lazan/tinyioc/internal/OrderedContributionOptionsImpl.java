@@ -1,12 +1,12 @@
 package com.lazan.tinyioc.internal;
 
-import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.lazan.tinyioc.IocException;
 import com.lazan.tinyioc.OrderedContributionOptions;
+import com.lazan.tinyioc.ServiceBuilder;
 
 public class OrderedContributionOptionsImpl extends UnorderedContributionOptionsImpl implements OrderedContributionOptions, Comparable<OrderedContributionOptionsImpl> {
 	private static final AtomicLong NEXT_DEFAULT_ORDER = new AtomicLong(0);
@@ -15,8 +15,8 @@ public class OrderedContributionOptionsImpl extends UnorderedContributionOptions
 	private Set<String> after;
 	private final long defaultOrder;
 	
-	public OrderedContributionOptionsImpl(String serviceId, String contributionId, Object value) {
-		super(serviceId, contributionId, value);
+	public OrderedContributionOptionsImpl(String serviceId, String contributionId, ServiceBuilder<?> builder) {
+		super(serviceId, contributionId, builder);
 		this.defaultOrder = NEXT_DEFAULT_ORDER.getAndIncrement();
 	}
 

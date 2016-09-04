@@ -10,6 +10,7 @@ import java.util.Set;
 
 import com.lazan.tinyioc.IocException;
 import com.lazan.tinyioc.ServiceBuilder;
+import com.lazan.tinyioc.ServiceBuilderContext;
 import com.lazan.tinyioc.ServiceDecorator;
 
 public class ServiceReference<T> {
@@ -64,18 +65,18 @@ public class ServiceReference<T> {
 				throw new IocException("Circular dependency reference detected %s", references);
 			}
 			ServiceRegistryImpl registryWrapper = new ServiceRegistryImpl(registry, serviceId);
-			ServiceBuilderContextImpl<T> context = new ServiceBuilderContextImpl<T>(registryWrapper, serviceId, dependencies.serviceType);
+			ServiceBuilderContextImpl context = new ServiceBuilderContextImpl(registryWrapper, serviceId, dependencies.serviceType);
 			
 			if (dependencies.contributionType != null) {
 				switch (dependencies.contributionType) {
 					case MAPPED: 
-						context.setMappedConfiguration(dependencies.contributionKeyType, dependencies.contributionValueType, getContributionMap());
+						context.setMappedConfiguration(dependencies.contributionKeyType, dependencies.contributionValueType, getContributionMap(context));
 						break;
 					case ORDERED:
-						context.setOrderedConfiguration(dependencies.contributionValueType, getContributionList());
+						context.setOrderedConfiguration(dependencies.contributionValueType, getContributionList(context));
 						break;
 					case UNORDERED:
-						context.setUnorderedConfiguration(dependencies.contributionValueType, getContributionCollection());
+						context.setUnorderedConfiguration(dependencies.contributionValueType, getContributionCollection(context));
 						break;
 				}
 			}
@@ -92,31 +93,32 @@ public class ServiceReference<T> {
 		return service;
 	}
 	
-	private Collection<Object> getContributionCollection() {
+	private Collection<Object> getContributionCollection(ServiceBuilderContext context) {
 		if (dependencies.unorderedContributions == null || dependencies.unorderedContributions.isEmpty()) return Collections.emptyList();
 		List<Object> list = new LinkedList<>();
 		for (UnorderedContributionOptionsImpl current : dependencies.unorderedContributions) {
-			list.add(current.getValue());
+			list.add(current.getValueBuilder().build(context));
 		}
 		return Collections.unmodifiableList(list);
 	}
 
-	private List<Object> getContributionList() {
+	private List<Object> getContributionList(ServiceBuilderContext context) {
 		if (dependencies.orderedContributions == null || dependencies.orderedContributions.isEmpty()) return Collections.emptyList();
 		List<Object> list = new LinkedList<>();
 		Collections.sort(dependencies.orderedContributions);
 		for (OrderedContributionOptionsImpl current : dependencies.orderedContributions) {
-			list.add(current.getValue());
+			list.add(current.getValueBuilder().build(context));
 		}
 		return Collections.unmodifiableList(list);
 	}
 
-	private Map<Object, Object> getContributionMap() {
+	private Map<Object, Object> getContributionMap(ServiceBuilderContext context) {
 		if (dependencies.mappedContributions == null || dependencies.mappedContributions.isEmpty()) return Collections.emptyMap();
 		Map<Object, Object> map = new LinkedHashMap<>();
 		for (MappedContributionOptionsImpl current : dependencies.mappedContributions) {
-			if (map.containsKey(current.getKey())) throw new IocException("Duplicate contribution key %s", current.getKey());
-			map.put(current.getKey(), current.getValue());
+			Object key = current.getKeyBuilder().build(context);
+			if (map.containsKey(key)) throw new IocException("Duplicate contribution key %s", key);
+			map.put(key, current.getValueBuilder().build(context));
 		}
 		return Collections.unmodifiableMap(map);
 	}

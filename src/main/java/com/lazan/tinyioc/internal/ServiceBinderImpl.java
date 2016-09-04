@@ -66,7 +66,21 @@ public class ServiceBinderImpl implements ServiceBinder {
 
 	@Override
 	public void mappedContribution(String serviceId, String contributionId, Object key, Object value) {
-		MappedContributionOptionsImpl options = new MappedContributionOptionsImpl(serviceId, contributionId, key, value);
+		ServiceBuilder<?> keyBuilder = new ConstantServiceBuilder<>(key);
+		ServiceBuilder<?> valueBuilder = new ConstantServiceBuilder<>(value);
+		mappedContribution(serviceId, contributionId, keyBuilder, valueBuilder);
+	}
+	
+	@Override
+	public void mappedContribution(String serviceId, String contributionId, Class<?> keyType, Class<?> valueType) {
+		ServiceBuilder<?> keyBuilder = new InjectionServiceBuilder<>(keyType);
+		ServiceBuilder<?> valueBuilder = new ConstantServiceBuilder<>(valueType);
+		mappedContribution(serviceId, contributionId, keyBuilder, valueBuilder);
+	}
+	
+	@Override
+	public void mappedContribution(String serviceId, String contributionId, ServiceBuilder<?> keyBuilder, ServiceBuilder<?> valueBuilder) {
+		MappedContributionOptionsImpl options = new MappedContributionOptionsImpl(serviceId, contributionId, keyBuilder, valueBuilder);
 		mappedContributions.add(options);
 	}
 	
@@ -76,8 +90,28 @@ public class ServiceBinderImpl implements ServiceBinder {
 	}
 	
 	@Override
+	public void mappedContribution(Class<?> serviceType, String contributionId, Class<?> keyType, Class<?> valueType) {
+		mappedContribution(ServiceRegistryImpl.getDefaultServiceId(serviceType), contributionId, keyType, valueType);
+	}
+	
+	@Override
+	public void mappedContribution(Class<?> serviceType, String contributionId, ServiceBuilder<?> keyBuilder, ServiceBuilder<?> valueBuilder) {
+		mappedContribution(ServiceRegistryImpl.getDefaultServiceId(serviceType), contributionId, keyBuilder, valueBuilder);
+	}
+	
+	@Override
 	public OrderedContributionOptions orderedContribution(String serviceId, String contributionId, Object value) {
-		OrderedContributionOptionsImpl options = new OrderedContributionOptionsImpl(serviceId, contributionId, value);
+		return orderedContribution(serviceId, contributionId, new ConstantServiceBuilder<>(value));
+	}
+	
+	@Override
+	public OrderedContributionOptions orderedContribution(String serviceId, String contributionId, Class<?> type) {
+		return orderedContribution(serviceId, contributionId, new InjectionServiceBuilder<>(type));
+	}
+	
+	@Override
+	public OrderedContributionOptions orderedContribution(String serviceId, String contributionId, ServiceBuilder<?> builder) {
+		OrderedContributionOptionsImpl options = new OrderedContributionOptionsImpl(serviceId, contributionId, builder);
 		orderedContributions.add(options);
 		return options;
 	}
@@ -88,14 +122,44 @@ public class ServiceBinderImpl implements ServiceBinder {
 	}
 	
 	@Override
-	public void unorderedContribution(String serviceId, String contributionId, Object value) {
-		UnorderedContributionOptionsImpl options = new UnorderedContributionOptionsImpl(serviceId, contributionId, value);
+	public OrderedContributionOptions orderedContribution(Class<?> serviceType, String contributionId, Class<?> type) {
+		return orderedContribution(ServiceRegistryImpl.getDefaultServiceId(serviceType), contributionId, type);
+	}
+	
+	@Override
+	public OrderedContributionOptions orderedContribution(Class<?> serviceType, String contributionId, ServiceBuilder<?> builder) {
+		return orderedContribution(ServiceRegistryImpl.getDefaultServiceId(serviceType), contributionId, builder);
+	}
+	
+	@Override
+	public void unorderedContribution(String serviceId, String contributionId, ServiceBuilder<?> builder) {
+		UnorderedContributionOptionsImpl options = new UnorderedContributionOptionsImpl(serviceId, contributionId, builder);
 		unorderedContributions.add(options);
+	}
+	
+	@Override
+	public void unorderedContribution(String serviceId, String contributionId, Object value) {
+		unorderedContribution(serviceId, contributionId, new ConstantServiceBuilder<>(value));
+	}
+	
+	@Override
+	public void unorderedContribution(String serviceId, String contributionId, Class<?> type) {
+		unorderedContribution(serviceId, contributionId, new InjectionServiceBuilder<>(type));
 	}
 	
 	@Override
 	public void unorderedContribution(Class<?> serviceType, String contributionId, Object value) {
 		unorderedContribution(ServiceRegistryImpl.getDefaultServiceId(serviceType), contributionId, value);
+	}
+	
+	@Override
+	public void unorderedContribution(Class<?> serviceType, String contributionId, Class<?> type) {
+		unorderedContribution(ServiceRegistryImpl.getDefaultServiceId(serviceType), contributionId, type);
+	}
+	
+	@Override
+	public void unorderedContribution(Class<?> serviceType, String contributionId, ServiceBuilder<?> builder) {
+		unorderedContribution(ServiceRegistryImpl.getDefaultServiceId(serviceType), contributionId, builder);
 	}
 	
 	public List<ServiceBinderOptionsImpl> getBindList() {
