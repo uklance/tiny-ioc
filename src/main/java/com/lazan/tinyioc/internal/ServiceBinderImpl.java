@@ -74,7 +74,7 @@ public class ServiceBinderImpl implements ServiceBinder {
 	@Override
 	public void mappedContribution(String serviceId, String contributionId, Class<?> keyType, Class<?> valueType) {
 		ServiceBuilder<?> keyBuilder = new InjectionServiceBuilder<>(keyType);
-		ServiceBuilder<?> valueBuilder = new ConstantServiceBuilder<>(valueType);
+		ServiceBuilder<?> valueBuilder = new InjectionServiceBuilder<>(valueType);
 		mappedContribution(serviceId, contributionId, keyBuilder, valueBuilder);
 	}
 	
