@@ -37,7 +37,7 @@ public class ServiceReference<T> {
 			this.contributionKeyType = contributionKeyType;
 			this.contributionValueType = contributionValueType;
 			this.unorderedContributions = unorderedContributions;
-			this.orderedContributions = orderedContributions == null ? null : new LinkedList<>(orderedContributions);
+			this.orderedContributions = orderedContributions;
 			this.mappedContributions = mappedContributions;
 		}
 	}
@@ -70,14 +70,16 @@ public class ServiceReference<T> {
 			if (dependencies.contributionType != null) {
 				switch (dependencies.contributionType) {
 					case MAPPED: 
-						context.setMappedConfiguration(dependencies.contributionKeyType, dependencies.contributionValueType, getContributionMap(context));
+						context.setMappedConfiguration(dependencies.contributionKeyType, dependencies.contributionValueType, buildContributionMap(context));
 						break;
 					case ORDERED:
-						context.setOrderedConfiguration(dependencies.contributionValueType, getContributionList(context));
+						context.setOrderedConfiguration(dependencies.contributionValueType, buildContributionList(context));
 						break;
 					case UNORDERED:
-						context.setUnorderedConfiguration(dependencies.contributionValueType, getContributionCollection(context));
+						context.setUnorderedConfiguration(dependencies.contributionValueType, buildContributionCollection(context));
 						break;
+					default:
+						throw new IocException("Unsupported contributiontype %s", dependencies.contributionType);
 				}
 			}
 			T candidate = dependencies.builder.build(context);
@@ -93,34 +95,35 @@ public class ServiceReference<T> {
 		return service;
 	}
 	
-	private Collection<Object> getContributionCollection(ServiceBuilderContext context) {
+	private Collection<Object> buildContributionCollection(ServiceBuilderContext context) {
 		if (dependencies.unorderedContributions == null || dependencies.unorderedContributions.isEmpty()) return Collections.emptyList();
-		List<Object> list = new LinkedList<>();
+		List<Object> values = new LinkedList<>();
 		for (UnorderedContributionOptionsImpl current : dependencies.unorderedContributions) {
-			list.add(current.getValueBuilder().build(context));
+			values.add(current.getValueBuilder().build(context));
 		}
-		return Collections.unmodifiableList(list);
+		return Collections.unmodifiableList(values);
 	}
 
-	private List<Object> getContributionList(ServiceBuilderContext context) {
+	private List<Object> buildContributionList(ServiceBuilderContext context) {
 		if (dependencies.orderedContributions == null || dependencies.orderedContributions.isEmpty()) return Collections.emptyList();
-		List<Object> list = new LinkedList<>();
-		Collections.sort(dependencies.orderedContributions);
-		for (OrderedContributionOptionsImpl current : dependencies.orderedContributions) {
-			list.add(current.getValueBuilder().build(context));
+		List<Object> values = new LinkedList<>();
+		List<OrderedContributionOptionsImpl> copy = new LinkedList<>(dependencies.orderedContributions);
+		Collections.sort(copy);
+		for (OrderedContributionOptionsImpl current : copy) {
+			values.add(current.getValueBuilder().build(context));
 		}
-		return Collections.unmodifiableList(list);
+		return Collections.unmodifiableList(values);
 	}
 
-	private Map<Object, Object> getContributionMap(ServiceBuilderContext context) {
+	private Map<Object, Object> buildContributionMap(ServiceBuilderContext context) {
 		if (dependencies.mappedContributions == null || dependencies.mappedContributions.isEmpty()) return Collections.emptyMap();
-		Map<Object, Object> map = new LinkedHashMap<>();
+		Map<Object, Object> values = new LinkedHashMap<>();
 		for (MappedContributionOptionsImpl current : dependencies.mappedContributions) {
 			Object key = current.getKeyBuilder().build(context);
-			if (map.containsKey(key)) throw new IocException("Duplicate contribution key %s", key);
-			map.put(key, current.getValueBuilder().build(context));
+			if (values.containsKey(key)) throw new IocException("Duplicate contribution key %s", key);
+			values.put(key, current.getValueBuilder().build(context));
 		}
-		return Collections.unmodifiableMap(map);
+		return Collections.unmodifiableMap(values);
 	}
 
 	public String getServiceId() {
