@@ -9,4 +9,5 @@ import java.lang.annotation.Target;
 @Target(ElementType.METHOD)
 public @interface Service {
 	String value() default "";
+	boolean eagerLoad() default false;
 }

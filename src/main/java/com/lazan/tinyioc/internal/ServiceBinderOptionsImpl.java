@@ -8,7 +8,8 @@ public class ServiceBinderOptionsImpl implements ServiceBinderOptions {
 	private final Class<?> serviceType;
 	private final ServiceBuilder<?> serviceBuilder;
 	private String serviceId;
-	private ContributionType contributionType;
+	private boolean eagerLoad;
+	private ContributionType contributionType = ContributionType.NONE;
 	private Class<?> contributionKeyType;
 	private Class<?> contributionValueType;
 	
@@ -26,7 +27,7 @@ public class ServiceBinderOptionsImpl implements ServiceBinderOptions {
 	
 	@Override
 	public ServiceBinderOptions withMappedContribution(Class<?> keyType, Class<?> valueType) {
-		if (contributionType != null) throw new IocException("Multiple contribution types specified");
+		if (contributionType != ContributionType.NONE) throw new IocException("Multiple contribution types specified");
 		contributionType = ContributionType.MAPPED;
 		contributionKeyType = keyType;
 		contributionValueType = valueType;
@@ -35,7 +36,7 @@ public class ServiceBinderOptionsImpl implements ServiceBinderOptions {
 	
 	@Override
 	public ServiceBinderOptions withOrderedContribution(Class<?> valueType) {
-		if (contributionType != null) throw new IocException("Multiple contribution types specified");
+		if (contributionType != ContributionType.NONE) throw new IocException("Multiple contribution types specified");
 		contributionType = ContributionType.ORDERED;
 		contributionValueType = valueType;
 		return this;
@@ -43,9 +44,15 @@ public class ServiceBinderOptionsImpl implements ServiceBinderOptions {
 	
 	@Override
 	public ServiceBinderOptions withUnorderedContribution(Class<?> valueType) {
-		if (contributionType != null) throw new IocException("Multiple contribution types specified");
+		if (contributionType != ContributionType.NONE) throw new IocException("Multiple contribution types specified");
 		contributionType = ContributionType.UNORDERED;
 		contributionValueType = valueType;
+		return this;
+	}
+	
+	@Override
+	public ServiceBinderOptions eagerLoad() {
+		this.eagerLoad = true;
 		return this;
 	}
 	
@@ -71,5 +78,9 @@ public class ServiceBinderOptionsImpl implements ServiceBinderOptions {
 	
 	public Class<?> getContributionValueType() {
 		return contributionValueType;
+	}
+	
+	public boolean isEagerLoad() {
+		return eagerLoad;
 	}
 }

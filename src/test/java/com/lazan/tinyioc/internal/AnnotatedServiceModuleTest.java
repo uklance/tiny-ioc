@@ -4,6 +4,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 import java.sql.Date;
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
 
 import javax.inject.Named;
 
@@ -132,6 +135,33 @@ public class AnnotatedServiceModuleTest {
 		ServiceRegistry registry = buildRegistry(DecoratorModule2.class);
 		String foo = registry.getService("foo", String.class);
 		assertEquals("312HELLO213", foo);
+	}
+	
+	public static class EagerLoadModule {
+		@Service(value="service1", eagerLoad=true)
+		public String service1(List<String> instances) {
+			instances.add("service1");
+			return "foo";
+		}
+		@Service(value="service2", eagerLoad=false)
+		public String service2(List<String> instances) {
+			instances.add("service2");
+			return "foo";
+		}
+		@Bind
+		public void bind(ServiceBinder binder) {
+			binder.bind(List.class, new LinkedList<String>());
+		}
+	}
+	
+	@Test
+	public void testEagerLoad() {
+		ServiceRegistry registry = buildRegistry(EagerLoadModule.class);
+		List<String> instances = registry.getService(List.class);
+		assertEquals(Arrays.asList("service1"), instances);
+		
+		registry.getService("service2");
+		assertEquals(Arrays.asList("service1", "service2"), instances);
 	}
 	
 	private ServiceRegistry buildRegistry(Class<?>... moduleTypes) {

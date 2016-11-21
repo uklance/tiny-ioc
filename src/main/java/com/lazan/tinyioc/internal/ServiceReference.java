@@ -17,6 +17,7 @@ public class ServiceReference<T> {
 	public class ServiceDependencies {
 		private final Class<T> serviceType;
 		private final ServiceBuilder<T> builder;
+		private final boolean eagerLoad;
 		private final List<ServiceDecorator<T>> decorators;
 		private final ContributionType contributionType;
 		private final Class<?> contributionKeyType;
@@ -24,7 +25,7 @@ public class ServiceReference<T> {
 		private final List<UnorderedContributionOptionsImpl> unorderedContributions;
 		private final List<OrderedContributionOptionsImpl> orderedContributions;
 		private final List<MappedContributionOptionsImpl> mappedContributions;
-		public ServiceDependencies(Class<T> serviceType, ServiceBuilder<T> builder, List<ServiceDecorator<T>> decorators,
+		public ServiceDependencies(Class<T> serviceType, ServiceBuilder<T> builder, boolean eagerLoad, List<ServiceDecorator<T>> decorators,
 				ContributionType contributionType, Class<?> contributionKeyType, Class<?> contributionValueType,
 				List<UnorderedContributionOptionsImpl> unorderedContributions,
 				List<OrderedContributionOptionsImpl> orderedContributions,
@@ -32,6 +33,7 @@ public class ServiceReference<T> {
 			super();
 			this.serviceType = serviceType;
 			this.builder = builder;
+			this.eagerLoad = eagerLoad;
 			this.decorators = decorators;
 			this.contributionType = contributionType;
 			this.contributionKeyType = contributionKeyType;
@@ -46,14 +48,17 @@ public class ServiceReference<T> {
 	private ServiceDependencies dependencies;
 	private volatile Object service;
 	
-	public ServiceReference(String serviceId, Class<T> serviceType, ServiceBuilder<T> builder,
+	public ServiceReference(String serviceId, Class<T> serviceType, ServiceBuilder<T> builder, boolean eagerLoad,
 			List<ServiceDecorator<T>> decorators, ContributionType contributionType, Class<?> contributionKeyType,
 			Class<?> contributionValueType, List<UnorderedContributionOptionsImpl> unorderedContributions,
 			List<OrderedContributionOptionsImpl> orderedContributions,
 			List<MappedContributionOptionsImpl> mappedContributions) {
 		super();
 		this.serviceId = serviceId;
-		this.dependencies = new ServiceDependencies(serviceType, builder, decorators, contributionType, contributionKeyType, contributionValueType, unorderedContributions, orderedContributions, mappedContributions);
+		this.dependencies = new ServiceDependencies(
+				serviceType, builder, eagerLoad, decorators, contributionType, contributionKeyType, contributionValueType, 
+				unorderedContributions, orderedContributions, mappedContributions
+		);
 	}
 
 	public synchronized Object get(ServiceRegistryImpl registry) {
@@ -67,20 +72,20 @@ public class ServiceReference<T> {
 			ServiceRegistryImpl registryWrapper = new ServiceRegistryImpl(registry, serviceId);
 			ServiceBuilderContextImpl context = new ServiceBuilderContextImpl(registryWrapper, serviceId, dependencies.serviceType);
 			
-			if (dependencies.contributionType != null) {
-				switch (dependencies.contributionType) {
-					case MAPPED: 
-						context.setMappedContributions(dependencies.contributionKeyType, dependencies.contributionValueType, buildContributionMap(context));
-						break;
-					case ORDERED:
-						context.setOrderedContributions(dependencies.contributionValueType, buildContributionList(context));
-						break;
-					case UNORDERED:
-						context.setUnorderedContributions(dependencies.contributionValueType, buildContributionCollection(context));
-						break;
-					default:
-						throw new IocException("Unsupported contributiontype %s", dependencies.contributionType);
-				}
+			switch (dependencies.contributionType) {
+				case NONE:
+					break;
+				case MAPPED: 
+					context.setMappedContributions(dependencies.contributionKeyType, dependencies.contributionValueType, buildContributionMap(context));
+					break;
+				case ORDERED:
+					context.setOrderedContributions(dependencies.contributionValueType, buildContributionList(context));
+					break;
+				case UNORDERED:
+					context.setUnorderedContributions(dependencies.contributionValueType, buildContributionCollection(context));
+					break;
+				default:
+					throw new IocException("Unsupported contributiontype %s", dependencies.contributionType);
 			}
 			T candidate = dependencies.builder.build(context);
 			if (dependencies.decorators != null) {
@@ -94,6 +99,12 @@ public class ServiceReference<T> {
 			dependencies = null;
 		}
 		return service;
+	}
+	
+	public void init(ServiceRegistryImpl registry) {
+		if (dependencies.eagerLoad) {
+			get(registry);
+		}
 	}
 	
 	private Collection<Object> buildContributionCollection(ServiceBuilderContext context) {

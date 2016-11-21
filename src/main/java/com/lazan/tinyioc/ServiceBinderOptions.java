@@ -5,4 +5,5 @@ public interface ServiceBinderOptions {
 	ServiceBinderOptions withOrderedContribution(Class<?> contributionType);
 	ServiceBinderOptions withUnorderedContribution(Class<?> contributionType);
 	ServiceBinderOptions withMappedContribution(Class<?> keyType, Class<?> valueType);
+	ServiceBinderOptions eagerLoad();
 }

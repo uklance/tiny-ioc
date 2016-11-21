@@ -9,7 +9,6 @@ import java.util.Map;
 import java.util.Set;
 
 import com.lazan.tinyioc.IocException;
-import com.lazan.tinyioc.ServiceBuilder;
 import com.lazan.tinyioc.ServiceDecorator;
 import com.lazan.tinyioc.ServiceModule;
 import com.lazan.tinyioc.ServiceRegistry;
@@ -42,17 +41,35 @@ public class ServiceRegistryImpl implements ServiceRegistry {
 			if (_referencesById.containsKey(serviceId)) {
 				throw new IocException("Duplicate serviceId '%s'", serviceId);
 			}
-			ServiceBuilder<?> overrideBuilder = getOverrideServiceBuilder(serviceId, serviceType, overrideMap);
-			ServiceBuilder<?> builder = overrideBuilder == null ? candidate.getServiceBuilder() : overrideBuilder;
+			ServiceBinderOptionsImpl override = overrideMap.get(serviceId);
+			if (override != null) {
+				if (!override.getServiceType().equals(candidate.getServiceType())) {
+					throw new IocException("Invalid override for serviceId '%s' (expected serviceType %s, found %s)", 
+							serviceId, candidate.getServiceType().getName(), override.getServiceType().getName());
+				}
+				if (!override.getContributionType().equals(candidate.getContributionType())) {
+					throw new IocException("Invalid override for serviceId '%s' (expected contributionType %s, found %s)", 
+							serviceId, candidate.getContributionType(), override.getContributionType());
+				}
+				if (!isEqual(override.getContributionKeyType(), candidate.getContributionKeyType())) {
+					throw new IocException("Invalid override for serviceId '%s' (expected contributionKeyType %s, found %s)", 
+							serviceId, candidate.getContributionKeyType().getName(), override.getContributionKeyType().getName());
+				}
+				if (!isEqual(override.getContributionValueType(), candidate.getContributionValueType())) {
+					throw new IocException("Invalid override for serviceId '%s' (expected contributionValueType %s, found %s)", 
+							serviceId, candidate.getContributionValueType().getName(), override.getContributionValueType().getName());
+				}
+			}
+			ServiceBinderOptionsImpl options = override == null ? candidate : override;
 			List<ServiceDecorator<?>> decorators = buildServiceDecorators(serviceId, serviceType, decoratorMap);
-			
 			List<UnorderedContributionOptionsImpl> unorderedContributions = unorderedContributionMap.get(serviceId);
 			List<OrderedContributionOptionsImpl> orderedContributions = orderedContributionMap.get(serviceId);
 			List<MappedContributionOptionsImpl> mappedContributions = mappedContributionMap.get(serviceId);
 
 			@SuppressWarnings({"unchecked", "rawtypes"})
-			ServiceReference<?> reference = new ServiceReference(serviceId, serviceType, builder, decorators, 
-					candidate.getContributionType(), candidate.getContributionKeyType(), candidate.getContributionValueType(), 
+			ServiceReference<?> reference = new ServiceReference(
+					serviceId, serviceType, options.getServiceBuilder(), options.isEagerLoad(), decorators, 
+					options.getContributionType(), options.getContributionKeyType(), options.getContributionValueType(), 
 					unorderedContributions, orderedContributions, mappedContributions);
 			_referencesById.put(serviceId, reference);
 
@@ -74,10 +91,24 @@ public class ServiceRegistryImpl implements ServiceRegistry {
 				throw new IocException("Attempted to decorate unknown serviceId '%s'", serviceId);
 			}
 		}
-
+		
 		idStack = Collections.emptySet();
 		referencesById = Collections.unmodifiableMap(_referencesById);
 		referencesByType = Collections.unmodifiableMap(_referencesByType);
+
+		for (ServiceReference<?> reference : referencesById.values()) {
+			reference.init(this);
+		}
+	}
+	
+	private boolean isEqual(Object o1, Object o2) {
+		if (o1 == null) {
+			return o2 == null;
+		} else if (o2 == null) {
+			return false;
+		} else {
+			return o1.equals(o2);
+		}
 	}
 	
 	private <T extends UnorderedContributionOptionsImpl> Map<String, List<T>> groupByServiceId(List<T> contributions) {
@@ -120,21 +151,6 @@ public class ServiceRegistryImpl implements ServiceRegistry {
 			decorators.add(options.getServiceDecorator());
 		}
 		return decorators;
-	}
-
-	protected ServiceBuilder<?> getOverrideServiceBuilder(
-			String serviceId,
-			Class<?> serviceType, 
-			Map<String, ServiceBinderOptionsImpl> overrideMap) {
-		ServiceBinderOptionsImpl options = overrideMap.get(serviceId);
-		if (options == null) {
-			return null;
-		}
-		if (!options.getServiceType().equals(serviceType)) {
-			throw new IocException("Invalid override for serviceId '%s', expected %s found %s",
-					serviceId, serviceType.getName(), options.getServiceType().getName());
-		}
-		return options.getServiceBuilder();
 	}
 
 	protected Map<String, List<ServiceDecoratorOptionsImpl>> createDecoratorMap(ServiceBinderImpl binder) {

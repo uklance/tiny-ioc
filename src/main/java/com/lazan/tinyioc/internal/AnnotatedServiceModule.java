@@ -112,10 +112,14 @@ public class AnnotatedServiceModule implements ServiceModule {
 	
 	@SuppressWarnings("unchecked")
 	protected void service(Object instance, Method method, ServiceBinder binder) {
+		Service annotation = method.getAnnotation(Service.class);
 		ServiceBinderOptions options = binder.bind(method.getReturnType(), createServiceBuilder(instance, method));
-		String serviceId = method.getAnnotation(Service.class).value();
+		String serviceId = annotation.value();
 		if (!serviceId.isEmpty()) {
 			options.withServiceId(serviceId);
+		}
+		if (annotation.eagerLoad()) {
+			options.eagerLoad();
 		}
 	}
 	
