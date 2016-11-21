@@ -70,13 +70,13 @@ public class ServiceReference<T> {
 			if (dependencies.contributionType != null) {
 				switch (dependencies.contributionType) {
 					case MAPPED: 
-						context.setMappedConfiguration(dependencies.contributionKeyType, dependencies.contributionValueType, buildContributionMap(context));
+						context.setMappedContributions(dependencies.contributionKeyType, dependencies.contributionValueType, buildContributionMap(context));
 						break;
 					case ORDERED:
-						context.setOrderedConfiguration(dependencies.contributionValueType, buildContributionList(context));
+						context.setOrderedContributions(dependencies.contributionValueType, buildContributionList(context));
 						break;
 					case UNORDERED:
-						context.setUnorderedConfiguration(dependencies.contributionValueType, buildContributionCollection(context));
+						context.setUnorderedContributions(dependencies.contributionValueType, buildContributionCollection(context));
 						break;
 					default:
 						throw new IocException("Unsupported contributiontype %s", dependencies.contributionType);

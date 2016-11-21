@@ -27,19 +27,19 @@ public class ServiceBuilderContextImpl implements ServiceBuilderContext {
 		this.serviceType = serviceType;
 	}
 	
-	void setOrderedConfiguration(Class<?> valueType, List contributions) {
+	void setOrderedContributions(Class<?> valueType, List contributions) {
 		this.contributionType = ContributionType.ORDERED;
 		this.contributionValueType = valueType;
 		this.orderedContributions = contributions;
 	}
 
-	void setUnorderedConfiguration(Class<?> valueType, Collection contributions) {
+	void setUnorderedContributions(Class<?> valueType, Collection contributions) {
 		this.contributionType = ContributionType.UNORDERED;
 		this.contributionValueType = valueType;
 		this.unorderedContributions = contributions;
 	}
 
-	void setMappedConfiguration(Class<?> keyType, Class<?> valueType, Map contributions) {
+	void setMappedContributions(Class<?> keyType, Class<?> valueType, Map contributions) {
 		this.contributionType = ContributionType.MAPPED;
 		this.contributionKeyType = keyType;
 		this.contributionValueType = valueType;
@@ -86,11 +86,13 @@ public class ServiceBuilderContextImpl implements ServiceBuilderContext {
 	
 	@Override
 	public Class<?> getContributionKeyType() {
+		if (contributionType != ContributionType.MAPPED) throw new IocException("Cannot get contribution key type for service %s (contributionType=%s)", serviceId, contributionType);
 		return contributionKeyType;
 	}
 	
 	@Override
 	public Class<?> getContributionValueType() {
+		if (contributionType == null) throw new IocException("Cannot get contribution value type for service %s (contributionType=%s)", serviceId, contributionType);
 		return contributionValueType;
 	}
 }
