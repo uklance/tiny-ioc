@@ -17,7 +17,6 @@ public class ServiceReference<T> {
 	public class ServiceDependencies {
 		private final Class<T> serviceType;
 		private final ServiceBuilder<T> builder;
-		private final boolean eagerLoad;
 		private final List<ServiceDecorator<T>> decorators;
 		private final ContributionType contributionType;
 		private final Class<?> contributionKeyType;
@@ -25,7 +24,7 @@ public class ServiceReference<T> {
 		private final List<UnorderedContributionOptionsImpl> unorderedContributions;
 		private final List<OrderedContributionOptionsImpl> orderedContributions;
 		private final List<MappedContributionOptionsImpl> mappedContributions;
-		public ServiceDependencies(Class<T> serviceType, ServiceBuilder<T> builder, boolean eagerLoad, List<ServiceDecorator<T>> decorators,
+		public ServiceDependencies(Class<T> serviceType, ServiceBuilder<T> builder, List<ServiceDecorator<T>> decorators,
 				ContributionType contributionType, Class<?> contributionKeyType, Class<?> contributionValueType,
 				List<UnorderedContributionOptionsImpl> unorderedContributions,
 				List<OrderedContributionOptionsImpl> orderedContributions,
@@ -33,7 +32,6 @@ public class ServiceReference<T> {
 			super();
 			this.serviceType = serviceType;
 			this.builder = builder;
-			this.eagerLoad = eagerLoad;
 			this.decorators = decorators;
 			this.contributionType = contributionType;
 			this.contributionKeyType = contributionKeyType;
@@ -45,6 +43,7 @@ public class ServiceReference<T> {
 	}
 	
 	private final String serviceId;
+	private final boolean eagerLoad;
 	private ServiceDependencies dependencies;
 	private volatile Object service;
 	
@@ -55,8 +54,9 @@ public class ServiceReference<T> {
 			List<MappedContributionOptionsImpl> mappedContributions) {
 		super();
 		this.serviceId = serviceId;
+		this.eagerLoad = eagerLoad;
 		this.dependencies = new ServiceDependencies(
-				serviceType, builder, eagerLoad, decorators, contributionType, contributionKeyType, contributionValueType, 
+				serviceType, builder, decorators, contributionType, contributionKeyType, contributionValueType, 
 				unorderedContributions, orderedContributions, mappedContributions
 		);
 	}
@@ -102,7 +102,7 @@ public class ServiceReference<T> {
 	}
 	
 	public void init(ServiceRegistryImpl registry) {
-		if (dependencies.eagerLoad) {
+		if (eagerLoad) {
 			get(registry);
 		}
 	}
