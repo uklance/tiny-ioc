@@ -43,7 +43,7 @@ public class AnnotatedServiceModuleTest {
 			return 1000;
 		}
 		
-		@Decorate(decoratorId="foo")
+		@Decorate(decoratorId="d1")
 		public Long decorateLong(Long delegate, Integer integer) {
 			return delegate + integer;
 		}
@@ -112,17 +112,17 @@ public class AnnotatedServiceModuleTest {
 		}
 		
 		@Decorate(serviceId="foo", decoratorId="d1", after="d2")
-		public String decorateFoo1(@Named("foo") String foo) {
+		public String decorateFoo1(String foo) {
 			return "1" + foo + "1";
 		}
 
 		@Decorate(serviceId="foo", decoratorId="d2", before="d3")
-		public String decorateFoo2(@Named("foo") String foo) {
+		public String decorateFoo2(String foo) {
 			return "2" + foo + "2";
 		}
 
 		@Decorate(serviceId="foo", decoratorId="d3", after="d1")
-		public String decorateFoo3(@Named("foo") String foo) {
+		public String decorateFoo3(String foo) {
 			return "3" + foo + "3";
 		}
 	}

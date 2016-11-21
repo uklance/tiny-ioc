@@ -188,11 +188,14 @@ public class AnnotatedServiceModule implements ServiceModule {
 			Class<?> paramType = paramTypes[i];
 			Named named = findAnnotation(paramAnnotations[i], Named.class);
 			boolean useDelegate = false;
-			Object param;
 			if (delegateProvided) {
-				String paramId = named == null ? ServiceRegistryImpl.getDefaultServiceId(paramType) : named.value();
-				useDelegate = context.getServiceId().equals(paramId);
+				if (named != null) {
+					useDelegate = context.getServiceId().equals(named.value());
+				} else {
+					useDelegate = context.getServiceType().equals(paramType);
+				}
 			}
+			Object param;
 			if (useDelegate) {
 				param = delegate;
 			} else  {
