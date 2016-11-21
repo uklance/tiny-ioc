@@ -3,9 +3,7 @@ package com.lazan.tinyioc.internal;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import javax.inject.Named;
@@ -158,10 +156,11 @@ public class AnnotatedServiceModule implements ServiceModule {
 				}
 			}
 		});
-		String serviceId = method.getAnnotation(Decorate.class).serviceId();
-		if (!serviceId.isEmpty()) {
-			options.withServiceId(serviceId);
+		if (!annotation.serviceId().isEmpty()) {
+			options.withServiceId(annotation.serviceId());
 		}
+		options.before(annotation.before());
+		options.after(annotation.after());
 	}
 	
 	protected <A extends Annotation> A findAnnotation(Annotation[] anns, Class<A> type) {
@@ -172,12 +171,11 @@ public class AnnotatedServiceModule implements ServiceModule {
 		}
 		return null;
 	}
-	@SuppressWarnings("rawtypes")
+
 	protected Object[] getParameters(Method method, ServiceBuilderContext context) {
 		return getParameters(method, context, false, null);
 	}
 	
-	@SuppressWarnings("rawtypes")
 	protected Object[] getParameters(Method method, ServiceBuilderContext context, boolean delegateProvided, Object delegate) {
 		Class<?>[] paramTypes = method.getParameterTypes();
 		if (paramTypes.length == 0) {

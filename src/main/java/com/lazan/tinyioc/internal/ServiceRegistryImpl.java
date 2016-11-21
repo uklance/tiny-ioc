@@ -148,7 +148,15 @@ public class ServiceRegistryImpl implements ServiceRegistry {
 			}
 			list.add(decorateOptions);
 		}
-		for (List<ServiceDecoratorOptionsImpl> list : decoratorMap.values()) {
+		for (Map.Entry<String, List<ServiceDecoratorOptionsImpl>> entry : decoratorMap.entrySet()) {
+			String serviceId = entry.getKey();
+			List<ServiceDecoratorOptionsImpl> list = entry.getValue();
+			Set<String> decoratorIds = new LinkedHashSet<>();
+			for (ServiceDecoratorOptionsImpl options : list) {
+				if (!decoratorIds.add(options.getDecoratorId())) {
+					throw new IocException("Duplicate decoratorId '%s' for serviceId '%s'", options.getDecoratorId(), serviceId);
+				}
+			}
 			Collections.sort(list);
 		}
 		return decoratorMap;

@@ -247,7 +247,7 @@ public class ServiceRegistryTest {
 				binder.bind(String.class, "hello2").withServiceId("string2");
 				binder.bind(String.class, "hello3").withServiceId("string3");
 				binder.decorate(String.class, "d2", new StringDecorator("two-%s-two")).withServiceId("string2");
-				binder.decorate(String.class, "d3", new StringDecorator("three-%s-three")).withServiceId("string3");
+				binder.decorate(String.class, "d2", new StringDecorator("three-%s-three")).withServiceId("string3");
 			}
 		};
 		assertEquals("one-hello1-one", buildRegistry(module1, module2).getService(String.class));
@@ -260,7 +260,7 @@ public class ServiceRegistryTest {
 			buildRegistry(module1, module2, module2).getService(String.class);
 			fail();
 		} catch (IocException e) {
-			assertEquals("Duplicate decorator for serviceId 'string'", e.getMessage());
+			assertEquals("Duplicate decoratorId 'd1' for serviceId 'string'", e.getMessage());
 		}
 		try {
 			buildRegistry(module2).getService(String.class);

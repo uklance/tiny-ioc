@@ -1,5 +1,6 @@
 package com.lazan.tinyioc.internal;
 
+import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
@@ -34,16 +35,20 @@ public class ServiceDecoratorOptionsImpl implements ServiceDecoratorOptions, Com
 	}
 	
 	@Override
-	public ServiceDecoratorOptionsImpl before(String contributionId) {
-		if (before == null) before = new LinkedHashSet<>();
-		before.add(contributionId);
+	public ServiceDecoratorOptionsImpl before(String... decoratorIds) {
+		if (decoratorIds != null && decoratorIds.length > 0) {
+			if (before == null) before = new LinkedHashSet<>();
+			before.addAll(Arrays.asList(decoratorIds));
+		}
 		return this;
 	}
 
 	@Override
-	public ServiceDecoratorOptionsImpl after(String contributionId) {
-		if (after == null) after = new LinkedHashSet<>();
-		after.add(contributionId);
+	public ServiceDecoratorOptionsImpl after(String... decoratorIds) {
+		if (decoratorIds != null && decoratorIds.length > 0) {
+			if (after == null) after = new LinkedHashSet<>();
+			after.addAll(Arrays.asList(decoratorIds));
+		}
 		return this;
 	}
 	

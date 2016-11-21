@@ -10,4 +10,6 @@ import java.lang.annotation.Target;
 public @interface Decorate {
 	String decoratorId();
 	String serviceId() default "";
+	String[] before() default {};
+	String[] after() default {};
 }
