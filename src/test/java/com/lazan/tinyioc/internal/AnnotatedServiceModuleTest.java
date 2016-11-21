@@ -51,7 +51,7 @@ public class AnnotatedServiceModuleTest {
 
 	@Test
 	public void testAnnotatedModule() {
-		ServiceRegistry registry = new ServiceRegistryBuilder().withModule(new AnnotatedServiceModule(TestModule.class)).build();
+		ServiceRegistry registry = buildRegistry(TestModule.class);
 		assertEquals("foo", registry.getService("string1"));
 		assertEquals("foox", registry.getService("string2"));
 		assertEquals("baz", registry.getService("string3"));
@@ -79,12 +79,9 @@ public class AnnotatedServiceModuleTest {
 		}
 	}
 	
-	
 	@Test
 	public void testDecorateNonUniqueServiceType() {
-		ServiceRegistry registry = new ServiceRegistryBuilder()
-				.withModule(new AnnotatedServiceModule(DecoratorModule.class))
-				.build();
+		ServiceRegistry registry = buildRegistry(DecoratorModule.class);
 		assertEquals("foox", registry.getService("string1"));
 		assertEquals("barybaz", registry.getService("string2"));
 	}
@@ -101,12 +98,43 @@ public class AnnotatedServiceModuleTest {
 	@Test
 	public void testBadConstructor() {
 		try {
-			new ServiceRegistryBuilder()
-					.withModule(new AnnotatedServiceModule(ErrorModule1.class))
-					.build();	
+			buildRegistry(ErrorModule1.class);	
 			fail();
 		} catch (IocException e) {
 			assertEquals("Error instantiating ErrorModule1", e.getMessage());
 		}
+	}
+	
+	public static class DecoratorModule2 {
+		@Bind
+		public void bind(ServiceBinder binder) {
+			binder.bind(String.class, "HELLO").withServiceId("foo");
+		}
+		
+		@Decorate(serviceId="foo", decoratorId="d1", after="d2")
+		public String decorateFoo1(@Named("foo") String foo) {
+			return "1" + foo + "1";
+		}
+
+		@Decorate(serviceId="foo", decoratorId="d2", before="d3")
+		public String decorateFoo2(@Named("foo") String foo) {
+			return "2" + foo + "2";
+		}
+
+		@Decorate(serviceId="foo", decoratorId="d3", after="d1")
+		public String decorateFoo3(@Named("foo") String foo) {
+			return "3" + foo + "3";
+		}
+	}
+	
+	@Test
+	public void testMultipleDecorators() {
+		ServiceRegistry registry = buildRegistry(DecoratorModule2.class);
+		String foo = registry.getService("foo", String.class);
+		assertEquals("312HELLO213", foo);
+	}
+	
+	private ServiceRegistry buildRegistry(Class<?>... moduleTypes) {
+		return new ServiceRegistryBuilder().withModuleTypes(moduleTypes).build();
 	}
 }

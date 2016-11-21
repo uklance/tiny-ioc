@@ -36,6 +36,13 @@ public class ServiceRegistryBuilder {
 		}
 		return this;
 	}
+
+	public ServiceRegistryBuilder withModuleTypes(Class<?>... moduleTypes) {
+		for (Class<?> moduleType : moduleTypes) {
+			withModuleType(moduleType);
+		}
+		return this;
+	}
 	
 	public ServiceRegistry build() {
 		return new ServiceRegistryImpl(modules);
