@@ -238,7 +238,7 @@ public class ServiceRegistryTest {
 		ServiceModule module2 = new ServiceModule() {
 			@Override
 			public void bind(ServiceBinder binder) {
-				binder.decorate(String.class, new StringDecorator("one-%s-one"));
+				binder.decorate(String.class, "d1", new StringDecorator("one-%s-one"));
 			}
 		};
 		ServiceModule module3 = new ServiceModule() {
@@ -246,8 +246,8 @@ public class ServiceRegistryTest {
 			public void bind(ServiceBinder binder) {
 				binder.bind(String.class, "hello2").withServiceId("string2");
 				binder.bind(String.class, "hello3").withServiceId("string3");
-				binder.decorate(String.class, new StringDecorator("two-%s-two")).withServiceId("string2");
-				binder.decorate(String.class, new StringDecorator("three-%s-three")).withServiceId("string3");
+				binder.decorate(String.class, "d2", new StringDecorator("two-%s-two")).withServiceId("string2");
+				binder.decorate(String.class, "d3", new StringDecorator("three-%s-three")).withServiceId("string3");
 			}
 		};
 		assertEquals("one-hello1-one", buildRegistry(module1, module2).getService(String.class));
@@ -268,6 +268,43 @@ public class ServiceRegistryTest {
 		} catch (IocException e) {
 			assertEquals("Attempted to decorate unknown serviceId 'string'", e.getMessage());
 		}
+	}
+	
+	@Test
+	public void testMultipleDecorate() {
+		ServiceModule module1 = new ServiceModule() {
+			@Override
+			public void bind(ServiceBinder binder) {
+				binder.bind(String.class, "SERVICE");
+				binder.decorate(String.class, "d1", new StringDecorator("a%sa"));
+				binder.decorate(String.class, "d2", new StringDecorator("b%sb"));
+				binder.decorate(String.class, "d3", new StringDecorator("c%sc"));
+			}
+		};
+		ServiceModule module2 = new ServiceModule() {
+			@Override
+			public void bind(ServiceBinder binder) {
+				binder.bind(String.class, "SERVICE");
+				binder.decorate(String.class, "d1", new StringDecorator("a%sa")).after("d2");
+				binder.decorate(String.class, "d2", new StringDecorator("b%sb")).after("d3");
+				binder.decorate(String.class, "d3", new StringDecorator("c%sc"));
+			}
+		};
+		ServiceModule module3 = new ServiceModule() {
+			@Override
+			public void bind(ServiceBinder binder) {
+				binder.bind(String.class, "SERVICE");
+				binder.decorate(String.class, "d1", new StringDecorator("a%sa"));
+				binder.decorate(String.class, "d2", new StringDecorator("b%sb"));
+				binder.decorate(String.class, "d3", new StringDecorator("c%sc")).before("*");
+			}
+		};
+		String value1 = buildRegistry(module1).getService(String.class);
+		assertEquals("cbaSERVICEabc", value1);
+		String value2 = buildRegistry(module2).getService(String.class);
+		assertEquals("abcSERVICEcba", value2);
+		String value3 = buildRegistry(module3).getService(String.class);
+		assertEquals("bacSERVICEcab", value3);
 	}
 
 	private ServiceRegistry buildRegistry(ServiceModule... modules) {

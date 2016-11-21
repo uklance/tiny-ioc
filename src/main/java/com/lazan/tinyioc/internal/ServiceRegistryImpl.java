@@ -30,7 +30,7 @@ public class ServiceRegistryImpl implements ServiceRegistry {
 		}
 		
 		Map<String, ServiceBinderOptionsImpl> overrideMap = createOverrideMap(binder);
-		Map<String, ServiceDecoratorOptionsImpl> decoratorMap = createDecoratorMap(binder);
+		Map<String, List<ServiceDecoratorOptionsImpl>> decoratorMap = createDecoratorMap(binder);
 		
 		Map<String, List<UnorderedContributionOptionsImpl>> unorderedContributionMap = groupByServiceId(binder.getUnorderedContributions());
 		Map<String, List<OrderedContributionOptionsImpl>> orderedContributionMap = groupByServiceId(binder.getOrderedContributions());
@@ -44,14 +44,14 @@ public class ServiceRegistryImpl implements ServiceRegistry {
 			}
 			ServiceBuilder<?> overrideBuilder = getOverrideServiceBuilder(serviceId, serviceType, overrideMap);
 			ServiceBuilder<?> builder = overrideBuilder == null ? candidate.getServiceBuilder() : overrideBuilder;
-			ServiceDecorator<?> decorator = getServiceDecorator(serviceId, serviceType, decoratorMap);
+			List<ServiceDecorator<?>> decorators = buildServiceDecorators(serviceId, serviceType, decoratorMap);
 			
 			List<UnorderedContributionOptionsImpl> unorderedContributions = unorderedContributionMap.get(serviceId);
 			List<OrderedContributionOptionsImpl> orderedContributions = orderedContributionMap.get(serviceId);
 			List<MappedContributionOptionsImpl> mappedContributions = mappedContributionMap.get(serviceId);
 
 			@SuppressWarnings({"unchecked", "rawtypes"})
-			ServiceReference<?> reference = new ServiceReference(serviceId, serviceType, builder, decorator, 
+			ServiceReference<?> reference = new ServiceReference(serviceId, serviceType, builder, decorators, 
 					candidate.getContributionType(), candidate.getContributionKeyType(), candidate.getContributionValueType(), 
 					unorderedContributions, orderedContributions, mappedContributions);
 			_referencesById.put(serviceId, reference);
@@ -102,20 +102,24 @@ public class ServiceRegistryImpl implements ServiceRegistry {
 		this.idStack = Collections.unmodifiableSet(_idStack);
 	}	
 
-	protected ServiceDecorator<?> getServiceDecorator(
+	protected List<ServiceDecorator<?>> buildServiceDecorators(
 			String serviceId,
-			Class<?> serviceType, Map<String, 
-			ServiceDecoratorOptionsImpl> decoratorMap)
+			Class<?> serviceType, 
+			Map<String, List<ServiceDecoratorOptionsImpl>> decoratorMap)
 	{
-		ServiceDecoratorOptionsImpl options = decoratorMap.get(serviceId);
-		if (options == null) {
+		List<ServiceDecoratorOptionsImpl> optionsList = decoratorMap.get(serviceId);
+		if (optionsList == null) {
 			return null;
 		}
-		if (!options.getServiceType().equals(serviceType)) {
-			throw new IocException("Invalid decorator for serviceId '%s', expected %s found %s",
-					serviceId, serviceType.getName(), options.getServiceType().getName());
+		List<ServiceDecorator<?>> decorators = new LinkedList<>();
+		for (ServiceDecoratorOptionsImpl options : optionsList) {
+			if (!options.getServiceType().equals(serviceType)) {
+				throw new IocException("Invalid decorator '%s' for serviceId '%s', expected %s found %s",
+						options.getDecoratorId(), serviceId, serviceType.getName(), options.getServiceType().getName());
+			}
+			decorators.add(options.getServiceDecorator());
 		}
-		return options.getServiceDecorator();
+		return decorators;
 	}
 
 	protected ServiceBuilder<?> getOverrideServiceBuilder(
@@ -133,14 +137,19 @@ public class ServiceRegistryImpl implements ServiceRegistry {
 		return options.getServiceBuilder();
 	}
 
-	protected Map<String, ServiceDecoratorOptionsImpl> createDecoratorMap(ServiceBinderImpl binder) {
-		Map<String, ServiceDecoratorOptionsImpl> decoratorMap = new LinkedHashMap<>();
+	protected Map<String, List<ServiceDecoratorOptionsImpl>> createDecoratorMap(ServiceBinderImpl binder) {
+		Map<String, List<ServiceDecoratorOptionsImpl>> decoratorMap = new LinkedHashMap<>();
 		for (ServiceDecoratorOptionsImpl decorateOptions : binder.getDecoratorList()) {
 			String serviceId = getServiceId(decorateOptions);
-			if (decoratorMap.containsKey(serviceId)) {
-				throw new IocException("Duplicate decorator for serviceId '%s'", serviceId);
+			List<ServiceDecoratorOptionsImpl> list = decoratorMap.get(serviceId);
+			if (list == null) {
+				list = new LinkedList<>();
+				decoratorMap.put(serviceId, list);
 			}
-			decoratorMap.put(serviceId, decorateOptions);
+			list.add(decorateOptions);
+		}
+		for (List<ServiceDecoratorOptionsImpl> list : decoratorMap.values()) {
+			Collections.sort(list);
 		}
 		return decoratorMap;
 	}

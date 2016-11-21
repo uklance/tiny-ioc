@@ -8,5 +8,6 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
 public @interface Decorate {
-	String value() default "";
+	String decoratorId();
+	String serviceId() default "";
 }

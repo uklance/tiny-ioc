@@ -17,14 +17,14 @@ public class ServiceReference<T> {
 	public class ServiceDependencies {
 		private final Class<T> serviceType;
 		private final ServiceBuilder<T> builder;
-		private final ServiceDecorator<T> decorator;
+		private final List<ServiceDecorator<T>> decorators;
 		private final ContributionType contributionType;
 		private final Class<?> contributionKeyType;
 		private final Class<?> contributionValueType;
 		private final List<UnorderedContributionOptionsImpl> unorderedContributions;
 		private final List<OrderedContributionOptionsImpl> orderedContributions;
 		private final List<MappedContributionOptionsImpl> mappedContributions;
-		public ServiceDependencies(Class<T> serviceType, ServiceBuilder<T> builder, ServiceDecorator<T> decorator,
+		public ServiceDependencies(Class<T> serviceType, ServiceBuilder<T> builder, List<ServiceDecorator<T>> decorators,
 				ContributionType contributionType, Class<?> contributionKeyType, Class<?> contributionValueType,
 				List<UnorderedContributionOptionsImpl> unorderedContributions,
 				List<OrderedContributionOptionsImpl> orderedContributions,
@@ -32,7 +32,7 @@ public class ServiceReference<T> {
 			super();
 			this.serviceType = serviceType;
 			this.builder = builder;
-			this.decorator = decorator;
+			this.decorators = decorators;
 			this.contributionType = contributionType;
 			this.contributionKeyType = contributionKeyType;
 			this.contributionValueType = contributionValueType;
@@ -47,13 +47,13 @@ public class ServiceReference<T> {
 	private volatile Object service;
 	
 	public ServiceReference(String serviceId, Class<T> serviceType, ServiceBuilder<T> builder,
-			ServiceDecorator<T> decorator, ContributionType contributionType, Class<?> contributionKeyType,
+			List<ServiceDecorator<T>> decorators, ContributionType contributionType, Class<?> contributionKeyType,
 			Class<?> contributionValueType, List<UnorderedContributionOptionsImpl> unorderedContributions,
 			List<OrderedContributionOptionsImpl> orderedContributions,
 			List<MappedContributionOptionsImpl> mappedContributions) {
 		super();
 		this.serviceId = serviceId;
-		this.dependencies = new ServiceDependencies(serviceType, builder, decorator, contributionType, contributionKeyType, contributionValueType, unorderedContributions, orderedContributions, mappedContributions);
+		this.dependencies = new ServiceDependencies(serviceType, builder, decorators, contributionType, contributionKeyType, contributionValueType, unorderedContributions, orderedContributions, mappedContributions);
 	}
 
 	public synchronized Object get(ServiceRegistryImpl registry) {
@@ -83,11 +83,12 @@ public class ServiceReference<T> {
 				}
 			}
 			T candidate = dependencies.builder.build(context);
-			if (dependencies.decorator != null) {
-				service = dependencies.decorator.decorate(candidate, context);
-			} else {
-				service = candidate;
+			if (dependencies.decorators != null) {
+				for (ServiceDecorator<T> decorator : dependencies.decorators) {
+					candidate = decorator.decorate(candidate, context);
+				}
 			}
+			service = candidate;
 			
 			// allow dependencies to be garbage collected
 			dependencies = null;

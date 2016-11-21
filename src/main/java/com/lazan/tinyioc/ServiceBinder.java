@@ -8,7 +8,7 @@ public interface ServiceBinder {
 	<T> ServiceBinderOptions override(Class<T> serviceType, Class<? extends T> concreteType);
 	<T> ServiceBinderOptions override(Class<T> serviceType, T service);
 	<T> ServiceBinderOptions override(Class<T> serviceType, ServiceBuilder<? extends T> builder);
-	<T> ServiceDecoratorOptions decorate(Class<T> serviceType, ServiceDecorator<? extends T> decorator);
+	<T> ServiceDecoratorOptions decorate(Class<T> serviceType, String decoratorId, ServiceDecorator<? extends T> decorator);
 	void unorderedContribution(String serviceId, String contributionId, Object value);
 	void unorderedContribution(String serviceId, String contributionId, Class<?> type);
 	void unorderedContribution(String serviceId, String contributionId, ServiceBuilder<?> builder);

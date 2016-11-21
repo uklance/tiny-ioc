@@ -43,7 +43,7 @@ public class AnnotatedServiceModuleTest {
 			return 1000;
 		}
 		
-		@Decorate
+		@Decorate(decoratorId="foo")
 		public Long decorateLong(Long delegate, Integer integer) {
 			return delegate + integer;
 		}
@@ -68,12 +68,12 @@ public class AnnotatedServiceModuleTest {
 			binder.bind(String.class, "baz").withServiceId("string3");
 		}
 		
-		@Decorate("string1")
+		@Decorate(serviceId="string1", decoratorId="decorator1")
 		public String decorateString1(@Named("string1") String string1) {
 			return string1 + "x";
 		}
 
-		@Decorate("string2")
+		@Decorate(serviceId="string2", decoratorId="decorator2")
 		public String decorateString2(@Named("string2") String string2, @Named("string3") String string3) {
 			return string2 + "y" + string3;
 		}

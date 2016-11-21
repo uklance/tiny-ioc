@@ -147,7 +147,8 @@ public class AnnotatedServiceModule implements ServiceModule {
 
 	@SuppressWarnings({"rawtypes", "unchecked"})
 	protected void decorate(Object instance, Method method, ServiceBinder binder) {
-		ServiceDecoratorOptions options = binder.decorate(method.getReturnType(), new ServiceDecorator() {
+		Decorate annotation = method.getAnnotation(Decorate.class);
+		ServiceDecoratorOptions options = binder.decorate(method.getReturnType(), annotation.decoratorId(), new ServiceDecorator() {
 			public Object decorate(Object delegate, ServiceBuilderContext context) {
 				Object[] params = getParameters(method, context, true, delegate);
 				try {
@@ -157,7 +158,7 @@ public class AnnotatedServiceModule implements ServiceModule {
 				}
 			}
 		});
-		String serviceId = method.getAnnotation(Decorate.class).value();
+		String serviceId = method.getAnnotation(Decorate.class).serviceId();
 		if (!serviceId.isEmpty()) {
 			options.withServiceId(serviceId);
 		}

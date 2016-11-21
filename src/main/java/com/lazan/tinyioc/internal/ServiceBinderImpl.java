@@ -58,8 +58,8 @@ public class ServiceBinderImpl implements ServiceBinder {
 	}
 	
 	@Override
-	public <T> ServiceDecoratorOptions decorate(Class<T> serviceType, ServiceDecorator<? extends T> decorator) {
-		ServiceDecoratorOptionsImpl options = new ServiceDecoratorOptionsImpl(serviceType, decorator);
+	public <T> ServiceDecoratorOptions decorate(Class<T> serviceType, String decoratorId, ServiceDecorator<? extends T> decorator) {
+		ServiceDecoratorOptionsImpl options = new ServiceDecoratorOptionsImpl(serviceType, decoratorId, decorator);
 		decoratorList.add(options);
 		return options;
 	}
