@@ -1,5 +1,6 @@
 package com.lazan.tinyioc.internal;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -9,9 +10,12 @@ import java.util.Map;
 import java.util.Set;
 
 import com.lazan.tinyioc.IocException;
+import com.lazan.tinyioc.MappedContributor;
+import com.lazan.tinyioc.OrderedContributor;
 import com.lazan.tinyioc.ServiceBuilder;
 import com.lazan.tinyioc.ServiceBuilderContext;
 import com.lazan.tinyioc.ServiceDecorator;
+import com.lazan.tinyioc.UnorderedContributor;
 
 public class ServiceReference<T> {
 	public class ServiceDependencies {
@@ -21,14 +25,14 @@ public class ServiceReference<T> {
 		private final ContributionType contributionType;
 		private final Class<?> contributionKeyType;
 		private final Class<?> contributionValueType;
-		private final List<UnorderedContributionOptionsImpl> unorderedContributions;
-		private final List<OrderedContributionOptionsImpl> orderedContributions;
-		private final List<MappedContributionOptionsImpl> mappedContributions;
+		private final List<UnorderedContributor<?>> unorderedContributions;
+		private final List<OrderedContributor<?>> orderedContributions;
+		private final List<MappedContributor<?,?>> mappedContributions;
 		public ServiceDependencies(Class<T> serviceType, ServiceBuilder<T> builder, List<ServiceDecorator<T>> decorators,
 				ContributionType contributionType, Class<?> contributionKeyType, Class<?> contributionValueType,
-				List<UnorderedContributionOptionsImpl> unorderedContributions,
-				List<OrderedContributionOptionsImpl> orderedContributions,
-				List<MappedContributionOptionsImpl> mappedContributions) {
+				List<UnorderedContributor<?>> unorderedContributions,
+				List<OrderedContributor<?>> orderedContributions,
+				List<MappedContributor<?, ?>> mappedContributions) {
 			super();
 			this.serviceType = serviceType;
 			this.builder = builder;
@@ -49,9 +53,9 @@ public class ServiceReference<T> {
 	
 	public ServiceReference(String serviceId, Class<T> serviceType, ServiceBuilder<T> builder, boolean eagerLoad,
 			List<ServiceDecorator<T>> decorators, ContributionType contributionType, Class<?> contributionKeyType,
-			Class<?> contributionValueType, List<UnorderedContributionOptionsImpl> unorderedContributions,
-			List<OrderedContributionOptionsImpl> orderedContributions,
-			List<MappedContributionOptionsImpl> mappedContributions) {
+			Class<?> contributionValueType, List<UnorderedContributor<?>> unorderedContributions,
+			List<OrderedContributor<?>> orderedContributions,
+			List<MappedContributor<?, ?>> mappedContributions) {
 		super();
 		this.serviceId = serviceId;
 		this.eagerLoad = eagerLoad;
@@ -76,13 +80,13 @@ public class ServiceReference<T> {
 				case NONE:
 					break;
 				case MAPPED: 
-					context.setMappedContributions(dependencies.contributionKeyType, dependencies.contributionValueType, buildContributionMap(context));
+					context.setMappedContributions(dependencies.contributionKeyType, dependencies.contributionValueType, buildMappedContributions(context));
 					break;
 				case ORDERED:
-					context.setOrderedContributions(dependencies.contributionValueType, buildContributionList(context));
+					context.setOrderedContributions(dependencies.contributionValueType, buildOrderedContributions(context));
 					break;
 				case UNORDERED:
-					context.setUnorderedContributions(dependencies.contributionValueType, buildContributionCollection(context));
+					context.setUnorderedContributions(dependencies.contributionValueType, buildUnorderedContributions(context));
 					break;
 				default:
 					throw new IocException("Unsupported contributiontype %s", dependencies.contributionType);
@@ -107,33 +111,66 @@ public class ServiceReference<T> {
 		}
 	}
 	
-	private Collection<Object> buildContributionCollection(ServiceBuilderContext context) {
-		if (dependencies.unorderedContributions == null || dependencies.unorderedContributions.isEmpty()) return Collections.emptyList();
-		List<Object> values = new LinkedList<>();
-		for (UnorderedContributionOptionsImpl current : dependencies.unorderedContributions) {
-			values.add(current.getValueBuilder().build(context));
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	private Collection<Object> buildUnorderedContributions(ServiceBuilderContext context) {
+		if (dependencies.unorderedContributions == null) {
+			return Collections.emptyList();
+		}
+		UnorderedConfigurationImpl configuration = new UnorderedConfigurationImpl();
+		for (UnorderedContributor contributor : dependencies.unorderedContributions) {
+			contributor.contribute(configuration);
+		}
+		Map<String, UnorderedConfigurationImpl.Entry> entryMap = new LinkedHashMap<>();
+		List<UnorderedConfigurationImpl.Entry> entries = configuration.getEntries();
+		for (UnorderedConfigurationImpl.Entry entry : entries) {
+			entryMap.put(entry.getContributionId(), entry);
+		}
+		List<Object> values = new ArrayList<>(entryMap.size());
+		for (UnorderedConfigurationImpl.Entry entry : entryMap.values()) {
+			values.add(entry.getValueBuilder().build(context));
 		}
 		return Collections.unmodifiableList(values);
 	}
 
-	private List<Object> buildContributionList(ServiceBuilderContext context) {
-		if (dependencies.orderedContributions == null || dependencies.orderedContributions.isEmpty()) return Collections.emptyList();
-		List<Object> values = new LinkedList<>();
-		List<OrderedContributionOptionsImpl> copy = new LinkedList<>(dependencies.orderedContributions);
-		Collections.sort(copy);
-		for (OrderedContributionOptionsImpl current : copy) {
-			values.add(current.getValueBuilder().build(context));
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	private List<Object> buildOrderedContributions(ServiceBuilderContext context) {
+		if (dependencies.orderedContributions == null) {
+			return Collections.emptyList();
+		}
+		OrderedConfigurationImpl configuration = new OrderedConfigurationImpl();
+		for (OrderedContributor contributor : dependencies.orderedContributions) {
+			contributor.contribute(configuration);
+		}
+		List<OrderedConfigurationImpl.Entry> entries = configuration.getEntries();
+		Collections.sort(entries);
+		Map<String, OrderedConfigurationImpl.Entry> entryMap = new LinkedHashMap<>();
+		for (OrderedConfigurationImpl.Entry entry : entries) {
+			entryMap.put(entry.getContributionId(), entry);
+		}
+		List<Object> values = new ArrayList<>(entryMap.size());
+		for (OrderedConfigurationImpl.Entry entry : entryMap.values()) {
+			values.add(entry.getValueBuilder().build(context));
 		}
 		return Collections.unmodifiableList(values);
 	}
 
-	private Map<Object, Object> buildContributionMap(ServiceBuilderContext context) {
-		if (dependencies.mappedContributions == null || dependencies.mappedContributions.isEmpty()) return Collections.emptyMap();
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	private Map<Object, Object> buildMappedContributions(ServiceBuilderContext context) {
+		if (dependencies.mappedContributions == null) {
+			return Collections.emptyMap();
+		}
+		MappedConfigurationImpl configuration = new MappedConfigurationImpl();
+		for (MappedContributor contributor : dependencies.mappedContributions) {
+			contributor.contribute(configuration);
+		}
+		List<MappedConfigurationImpl.Entry> entries = configuration.getEntries();
+		Map<String, MappedConfigurationImpl.Entry> entryMap = new LinkedHashMap<>();
+		for (MappedConfigurationImpl.Entry entry : entries) {
+			entryMap.put(entry.getContributionId(), entry);
+		}
 		Map<Object, Object> values = new LinkedHashMap<>();
-		for (MappedContributionOptionsImpl current : dependencies.mappedContributions) {
-			Object key = current.getKeyBuilder().build(context);
-			if (values.containsKey(key)) throw new IocException("Duplicate contribution key %s", key);
-			values.put(key, current.getValueBuilder().build(context));
+		for (MappedConfigurationImpl.Entry entry : entryMap.values()) {
+			values.put(entry.getKeyBuilder().build(context), entry.getValueBuilder().build(context));
 		}
 		return Collections.unmodifiableMap(values);
 	}

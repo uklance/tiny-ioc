@@ -1,23 +1,27 @@
 package com.lazan.tinyioc.internal;
 
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
-import com.lazan.tinyioc.OrderedContributionOptions;
+import com.lazan.tinyioc.MappedContributor;
+import com.lazan.tinyioc.OrderedContributor;
 import com.lazan.tinyioc.ServiceBinder;
 import com.lazan.tinyioc.ServiceBinderOptions;
 import com.lazan.tinyioc.ServiceBuilder;
 import com.lazan.tinyioc.ServiceDecorator;
 import com.lazan.tinyioc.ServiceDecoratorOptions;
+import com.lazan.tinyioc.UnorderedContributor;
 
 public class ServiceBinderImpl implements ServiceBinder {
 	private List<ServiceBinderOptionsImpl> bindList = new LinkedList<>();
 	private List<ServiceBinderOptionsImpl> overrideList = new LinkedList<>();
 	private List<ServiceDecoratorOptionsImpl> decoratorList = new LinkedList<>(); 
-	private List<UnorderedContributionOptionsImpl> unorderedContributions = new LinkedList<>();
-	private List<OrderedContributionOptionsImpl> orderedContributions = new LinkedList<>();
-	private List<MappedContributionOptionsImpl> mappedContributions = new LinkedList<>();
-	
+	private Map<String, List<OrderedContributor<?>>> orderedContributors = new LinkedHashMap<>();
+	private Map<String, List<UnorderedContributor<?>>> unorderedContributors = new LinkedHashMap<>();
+	private Map<String, List<MappedContributor<?, ?>>> mappedContributors = new LinkedHashMap<>();
+
 	@Override
 	public <T> ServiceBinderOptions bind(Class<T> serviceType) {
 		return bind(serviceType, new InjectionServiceBuilder<>(serviceType));
@@ -63,105 +67,52 @@ public class ServiceBinderImpl implements ServiceBinder {
 		decoratorList.add(options);
 		return options;
 	}
+	
+	@Override
+	public void contribute(String serviceId, OrderedContributor<?> contributor) {
+		List<OrderedContributor<?>> list = orderedContributors.get(serviceId);
+		if (list == null) {
+			list = new LinkedList<>();
+			orderedContributors.put(serviceId,  list);
+		}
+		list.add(contributor);
+	}
 
 	@Override
-	public void mappedContribution(String serviceId, String contributionId, Object key, Object value) {
-		ServiceBuilder<?> keyBuilder = new ConstantServiceBuilder<>(key);
-		ServiceBuilder<?> valueBuilder = new ConstantServiceBuilder<>(value);
-		mappedContribution(serviceId, contributionId, keyBuilder, valueBuilder);
+	public void contribute(Class<?> serviceType, OrderedContributor<?> contributor) {
+		contribute(ServiceRegistryImpl.getDefaultServiceId(serviceType), contributor);
 	}
-	
+
 	@Override
-	public void mappedContribution(String serviceId, String contributionId, Class<?> keyType, Class<?> valueType) {
-		ServiceBuilder<?> keyBuilder = new InjectionServiceBuilder<>(keyType);
-		ServiceBuilder<?> valueBuilder = new InjectionServiceBuilder<>(valueType);
-		mappedContribution(serviceId, contributionId, keyBuilder, valueBuilder);
+	public void contribute(String serviceId, UnorderedContributor<?> contributor) {
+		List<UnorderedContributor<?>> list = unorderedContributors.get(serviceId);
+		if (list == null) {
+			list = new LinkedList<>();
+			unorderedContributors.put(serviceId,  list);
+		}
+		list.add(contributor);
 	}
-	
+
 	@Override
-	public void mappedContribution(String serviceId, String contributionId, ServiceBuilder<?> keyBuilder, ServiceBuilder<?> valueBuilder) {
-		MappedContributionOptionsImpl options = new MappedContributionOptionsImpl(serviceId, contributionId, keyBuilder, valueBuilder);
-		mappedContributions.add(options);
+	public void contribute(Class<?> serviceType, UnorderedContributor<?> contributor) {
+		contribute(ServiceRegistryImpl.getDefaultServiceId(serviceType), contributor);
 	}
-	
+
 	@Override
-	public void mappedContribution(Class<?> serviceType, String contributionId, Object key, Object value) {
-		mappedContribution(ServiceRegistryImpl.getDefaultServiceId(serviceType), contributionId, key, value);
+	public void contribute(String serviceId, MappedContributor<?, ?> contributor) {
+		List<MappedContributor<?, ?>> list = mappedContributors.get(serviceId);
+		if (list == null) {
+			list = new LinkedList<>();
+			mappedContributors.put(serviceId,  list);
+		}
+		list.add(contributor);
 	}
-	
+
 	@Override
-	public void mappedContribution(Class<?> serviceType, String contributionId, Class<?> keyType, Class<?> valueType) {
-		mappedContribution(ServiceRegistryImpl.getDefaultServiceId(serviceType), contributionId, keyType, valueType);
+	public void contribute(Class<?> serviceType, MappedContributor<?, ?> contributor) {
+		contribute(ServiceRegistryImpl.getDefaultServiceId(serviceType), contributor);
 	}
-	
-	@Override
-	public void mappedContribution(Class<?> serviceType, String contributionId, ServiceBuilder<?> keyBuilder, ServiceBuilder<?> valueBuilder) {
-		mappedContribution(ServiceRegistryImpl.getDefaultServiceId(serviceType), contributionId, keyBuilder, valueBuilder);
-	}
-	
-	@Override
-	public OrderedContributionOptions orderedContribution(String serviceId, String contributionId, Object value) {
-		return orderedContribution(serviceId, contributionId, new ConstantServiceBuilder<>(value));
-	}
-	
-	@Override
-	public OrderedContributionOptions orderedContribution(String serviceId, String contributionId, Class<?> type) {
-		return orderedContribution(serviceId, contributionId, new InjectionServiceBuilder<>(type));
-	}
-	
-	@Override
-	public OrderedContributionOptions orderedContribution(String serviceId, String contributionId, ServiceBuilder<?> builder) {
-		OrderedContributionOptionsImpl options = new OrderedContributionOptionsImpl(serviceId, contributionId, builder);
-		orderedContributions.add(options);
-		return options;
-	}
-	
-	@Override
-	public OrderedContributionOptions orderedContribution(Class<?> serviceType, String contributionId, Object value) {
-		return orderedContribution(ServiceRegistryImpl.getDefaultServiceId(serviceType), contributionId, value);
-	}
-	
-	@Override
-	public OrderedContributionOptions orderedContribution(Class<?> serviceType, String contributionId, Class<?> type) {
-		return orderedContribution(ServiceRegistryImpl.getDefaultServiceId(serviceType), contributionId, type);
-	}
-	
-	@Override
-	public OrderedContributionOptions orderedContribution(Class<?> serviceType, String contributionId, ServiceBuilder<?> builder) {
-		return orderedContribution(ServiceRegistryImpl.getDefaultServiceId(serviceType), contributionId, builder);
-	}
-	
-	@Override
-	public void unorderedContribution(String serviceId, String contributionId, ServiceBuilder<?> builder) {
-		UnorderedContributionOptionsImpl options = new UnorderedContributionOptionsImpl(serviceId, contributionId, builder);
-		unorderedContributions.add(options);
-	}
-	
-	@Override
-	public void unorderedContribution(String serviceId, String contributionId, Object value) {
-		unorderedContribution(serviceId, contributionId, new ConstantServiceBuilder<>(value));
-	}
-	
-	@Override
-	public void unorderedContribution(String serviceId, String contributionId, Class<?> type) {
-		unorderedContribution(serviceId, contributionId, new InjectionServiceBuilder<>(type));
-	}
-	
-	@Override
-	public void unorderedContribution(Class<?> serviceType, String contributionId, Object value) {
-		unorderedContribution(ServiceRegistryImpl.getDefaultServiceId(serviceType), contributionId, value);
-	}
-	
-	@Override
-	public void unorderedContribution(Class<?> serviceType, String contributionId, Class<?> type) {
-		unorderedContribution(ServiceRegistryImpl.getDefaultServiceId(serviceType), contributionId, type);
-	}
-	
-	@Override
-	public void unorderedContribution(Class<?> serviceType, String contributionId, ServiceBuilder<?> builder) {
-		unorderedContribution(ServiceRegistryImpl.getDefaultServiceId(serviceType), contributionId, builder);
-	}
-	
+
 	public List<ServiceBinderOptionsImpl> getBindList() {
 		return bindList;
 	}
@@ -174,15 +125,15 @@ public class ServiceBinderImpl implements ServiceBinder {
 		return decoratorList;
 	}
 	
-	public List<OrderedContributionOptionsImpl> getOrderedContributions() {
-		return orderedContributions;
+	public Map<String, List<OrderedContributor<?>>> getOrderedContributors() {
+		return orderedContributors;
 	}
 	
-	public List<UnorderedContributionOptionsImpl> getUnorderedContributions() {
-		return unorderedContributions;
+	public Map<String, List<UnorderedContributor<?>>> getUnorderedContributors() {
+		return unorderedContributors;
 	}
 	
-	public List<MappedContributionOptionsImpl> getMappedContributions() {
-		return mappedContributions;
+	public Map<String, List<MappedContributor<?, ?>>> getMappedContributors() {
+		return mappedContributors;
 	}
 }

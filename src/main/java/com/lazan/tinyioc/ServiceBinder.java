@@ -9,22 +9,10 @@ public interface ServiceBinder {
 	<T> ServiceBinderOptions override(Class<T> serviceType, T service);
 	<T> ServiceBinderOptions override(Class<T> serviceType, ServiceBuilder<? extends T> builder);
 	<T> ServiceDecoratorOptions decorate(Class<T> serviceType, String decoratorId, ServiceDecorator<? extends T> decorator);
-	void unorderedContribution(String serviceId, String contributionId, Object value);
-	void unorderedContribution(String serviceId, String contributionId, Class<?> type);
-	void unorderedContribution(String serviceId, String contributionId, ServiceBuilder<?> builder);
-	void unorderedContribution(Class<?> serviceType, String contributionId, Object value);
-	void unorderedContribution(Class<?> serviceType, String contributionId, Class<?> type);
-	void unorderedContribution(Class<?> serviceType, String contributionId, ServiceBuilder<?> builder);
-	OrderedContributionOptions orderedContribution(String serviceId, String contributionId, Object value);
-	OrderedContributionOptions orderedContribution(String serviceId, String contributionId, Class<?> type);
-	OrderedContributionOptions orderedContribution(String serviceId, String contributionId, ServiceBuilder<?> builder);
-	OrderedContributionOptions orderedContribution(Class<?> serviceType, String contributionId, Object value);
-	OrderedContributionOptions orderedContribution(Class<?> serviceType, String contributionId, Class<?> type);
-	OrderedContributionOptions orderedContribution(Class<?> serviceType, String contributionId, ServiceBuilder<?> builder);
-	void mappedContribution(String serviceId, String contributionId, Object key, Object value);
-	void mappedContribution(String serviceId, String contributionId, Class<?> keyType, Class<?> valueType);
-	void mappedContribution(String serviceId, String contributionId, ServiceBuilder<?> keyBuilder, ServiceBuilder<?> valueBuilder);
-	void mappedContribution(Class<?> serviceType, String contributionId, Object key, Object value);
-	void mappedContribution(Class<?> serviceType, String contributionId, Class<?> keyType, Class<?> valueType);
-	void mappedContribution(Class<?> serviceType, String contributionId, ServiceBuilder<?> keyBuilder, ServiceBuilder<?> valueBuilder);
+	void contribute(String serviceId, OrderedContributor<?> contributor);
+	void contribute(Class<?> serviceType, OrderedContributor<?> contributor);
+	void contribute(String serviceId, UnorderedContributor<?> contributor);
+	void contribute(Class<?> serviceType, UnorderedContributor<?> contributor);
+	void contribute(String serviceId, MappedContributor<?, ?> contributor);
+	void contribute(Class<?> serviceType, MappedContributor<?, ?> contributor);
 }

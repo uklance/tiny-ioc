@@ -396,16 +396,46 @@ public class ServiceRegistryTest {
 						assertEquals(String.class, context.getContributionValueType());
 						return new CollectionBean(context.getUnorderedContributions(String.class));
 					}
-				}).withUnorderedContribution(String.class); 
-				binder.mappedContribution("mapBean", "c1", "key1", "value1");
-				binder.mappedContribution(MapBean.class, "c2", "key2", "value2");
-				binder.orderedContribution("listBean", "c3", "value3");
-				binder.orderedContribution("listBean", "c4", "value4").before("c3");
-				binder.orderedContribution("listBean", "c5", "value5").after("*");
-				binder.orderedContribution(ListBean.class, "c6", "value6").after("c4");
-				binder.unorderedContribution("collectionBean", "value6", "c6");
-				binder.unorderedContribution("collectionBean", "value7", "c7");
-				binder.unorderedContribution(CollectionBean.class, "value8", "c8");
+				}).withUnorderedContribution(String.class);
+				binder.contribute("mapBean", new MappedContributor<String, String>() {
+					@Override
+					public void contribute(MappedConfiguration<String, String> configuration) {
+						configuration.add("c1", "key1", "value1");
+					}
+				});
+				binder.contribute(MapBean.class, new MappedContributor<String, String>() {
+					@Override
+					public void contribute(MappedConfiguration<String, String> configuration) {
+						configuration.add("c2", "key2", "value2");
+					}
+				});
+				binder.contribute("listBean", new OrderedContributor<String>() {
+					@Override
+					public void contribute(OrderedConfiguration<String> configuration) {
+						configuration.add("c3", "value3");
+						configuration.add("c4", "value4").before("c3");
+						configuration.add("c5", "value5").after("*");
+					}
+				});
+				binder.contribute(ListBean.class, new OrderedContributor<String>() {
+					@Override
+					public void contribute(OrderedConfiguration<String> configuration) {
+						configuration.add("c6", "value6").after("c4");
+					}
+				});
+				binder.contribute("collectionBean", new UnorderedContributor<String>() {
+					@Override
+					public void contribute(UnorderedConfiguration<String> configuration) {
+						configuration.add("c6", "value6");
+						configuration.add("c7", "value7");
+					}
+				});
+				binder.contribute(CollectionBean.class, new UnorderedContributor<String>() {
+					@Override
+					public void contribute(UnorderedConfiguration<String> configuration) {
+						configuration.add("c8", "value8");
+					}
+				});
 			}
 		};
 		ServiceRegistry registry = buildRegistry(module);
@@ -420,6 +450,6 @@ public class ServiceRegistryTest {
 		assertEquals(Arrays.asList("value4", "value3", "value6", "value5"), listBean.getList());
 		
 		CollectionBean collectionBean = registry.getService(CollectionBean.class);
-		assertEquals(Arrays.asList("c6","c7","c8"), collectionBean.getCollection());
+		assertEquals(Arrays.asList("value6", "value7", "value8"), collectionBean.getCollection());
 	}
 }

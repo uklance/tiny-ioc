@@ -9,9 +9,12 @@ import java.util.Map;
 import java.util.Set;
 
 import com.lazan.tinyioc.IocException;
+import com.lazan.tinyioc.MappedContributor;
+import com.lazan.tinyioc.OrderedContributor;
 import com.lazan.tinyioc.ServiceDecorator;
 import com.lazan.tinyioc.ServiceModule;
 import com.lazan.tinyioc.ServiceRegistry;
+import com.lazan.tinyioc.UnorderedContributor;
 
 public class ServiceRegistryImpl implements ServiceRegistry {
 	private final Set<String> idStack;
@@ -30,10 +33,6 @@ public class ServiceRegistryImpl implements ServiceRegistry {
 		
 		Map<String, ServiceBinderOptionsImpl> overrideMap = createOverrideMap(binder);
 		Map<String, List<ServiceDecoratorOptionsImpl>> decoratorMap = createDecoratorMap(binder);
-		
-		Map<String, List<UnorderedContributionOptionsImpl>> unorderedContributionMap = groupByServiceId(binder.getUnorderedContributions());
-		Map<String, List<OrderedContributionOptionsImpl>> orderedContributionMap = groupByServiceId(binder.getOrderedContributions());
-		Map<String, List<MappedContributionOptionsImpl>> mappedContributionMap = groupByServiceId(binder.getMappedContributions());
 		
 		for (ServiceBinderOptionsImpl candidate : binder.getBindList()) {
 			String serviceId = getServiceId(candidate);
@@ -62,9 +61,9 @@ public class ServiceRegistryImpl implements ServiceRegistry {
 			}
 			ServiceBinderOptionsImpl options = override == null ? candidate : override;
 			List<ServiceDecorator<?>> decorators = buildServiceDecorators(serviceId, serviceType, decoratorMap);
-			List<UnorderedContributionOptionsImpl> unorderedContributions = unorderedContributionMap.get(serviceId);
-			List<OrderedContributionOptionsImpl> orderedContributions = orderedContributionMap.get(serviceId);
-			List<MappedContributionOptionsImpl> mappedContributions = mappedContributionMap.get(serviceId);
+			List<UnorderedContributor<?>> unorderedContributions = binder.getUnorderedContributors().get(serviceId);
+			List<OrderedContributor<?>> orderedContributions = binder.getOrderedContributors().get(serviceId);
+			List<MappedContributor<?, ?>> mappedContributions = binder.getMappedContributors().get(serviceId);
 
 			@SuppressWarnings({"unchecked", "rawtypes"})
 			ServiceReference<?> reference = new ServiceReference(
@@ -111,19 +110,6 @@ public class ServiceRegistryImpl implements ServiceRegistry {
 		}
 	}
 	
-	private <T extends UnorderedContributionOptionsImpl> Map<String, List<T>> groupByServiceId(List<T> contributions) {
-		Map<String, List<T>> grouped = new LinkedHashMap<>();
-		for (T contribution : contributions) {
-			List<T> list = grouped.get(contribution.getServiceId());
-			if (list == null) {
-				list = new LinkedList<>();
-				grouped.put(contribution.getServiceId(), list);
-			}
-			list.add(contribution);
-		}
-		return grouped;
-	}
-
 	protected ServiceRegistryImpl(ServiceRegistryImpl registry, String serviceId) {
 		this.referencesById = registry.referencesById;
 		this.referencesByType = registry.referencesByType;
