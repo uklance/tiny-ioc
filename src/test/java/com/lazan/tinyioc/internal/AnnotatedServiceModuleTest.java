@@ -213,12 +213,11 @@ public class AnnotatedServiceModuleTest {
 		}		
 	}
 	
-	@SuppressWarnings({ "rawtypes", "unchecked" })
+	@SuppressWarnings("unchecked")
 	@Test
 	public void testContribute() {
 		ServiceRegistry registry = buildRegistry(ContributeModule.class);
-		List list = registry.getService(List.class);
-		assertEquals(Arrays.asList("value1", "value2"), list);
+		assertEquals(Arrays.asList("value1", "value2"), registry.getService(List.class));
 		
 		Map<String, String> expectedMap = new LinkedHashMap<>();
 		expectedMap.put("key1", "value1");
@@ -228,8 +227,34 @@ public class AnnotatedServiceModuleTest {
 		Set<String> expectedCollection = new LinkedHashSet<>(Arrays.asList("value1", "value2"));
 		Set<String> actualCollection = new LinkedHashSet<>(registry.getService(Collection.class));
 		assertEquals(expectedCollection, actualCollection);
+	}	
+	
+	public static class ContributeModule2 {
+		@Service("foo")
+		public String foo(List<String> list, Map<String, Long> map, Collection<Integer> collection) {
+			return String.format("list=%s,map=%s,collection=%s", list, map, collection);
+		}
+		@Contribute(serviceId="foo")
+		public void contribute1(OrderedConfiguration<String> config) {
+			config.add("c1", "a");
+		}
+		@Contribute(serviceId="foo")
+		public void contribute2(MappedConfiguration<String, Long> config) {
+			config.add("c1", "b", 2L);
+		}
+		@Contribute(serviceId="foo")
+		public void contribute3(UnorderedConfiguration<Integer> config) {
+			config.add("c1", 3);
+		}
 	}
 	
+	@Test
+	public void testContribute2() {
+		ServiceRegistry registry = buildRegistry(ContributeModule2.class);
+		String foo = registry.getService("foo", String.class);
+		assertEquals("list=[a],map={b=2},collection=[3]", foo);
+	}	
+
 	private ServiceRegistry buildRegistry(Class<?>... moduleTypes) {
 		return new ServiceRegistryBuilder().withModuleTypes(moduleTypes).build();
 	}

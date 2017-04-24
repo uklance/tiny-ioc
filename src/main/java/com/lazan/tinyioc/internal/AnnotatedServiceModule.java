@@ -184,7 +184,8 @@ public class AnnotatedServiceModule implements ServiceModule {
 		Class<?> serviceType = annotation.serviceType().equals(void.class) ? null : annotation.serviceType();
 		int valueCount = (serviceId == null ? 0 : 1) + (serviceType == null ? 0 : 1);
 		if (valueCount != 1) {
-			throw new IocException("Expected one of serviceId and serviceType, found %s", valueCount);
+			throw new IocException("Error with %s.%s. Expected one of serviceId and serviceType, found %s", 
+					method.getDeclaringClass().getSimpleName(), method.getName(), valueCount);
 		}
 		for (int i = 0; i < method.getParameterTypes().length; ++i) {
 			Class<?> paramType = method.getParameterTypes()[i];
@@ -193,7 +194,8 @@ public class AnnotatedServiceModule implements ServiceModule {
 			}
 		}
 		if (paramIndexes.size() != 1) {
-			throw new IocException("Expected 1 parameter of the types %s, found %s", CONTRIBUTION_TYPES, paramIndexes.size());
+			throw new IocException("Error with %s.%s. Expected 1 parameter of the types %s, found %s", 
+					method.getDeclaringClass().getSimpleName(), method.getName(), CONTRIBUTION_TYPES, paramIndexes.size());
 		}
 		Class<?> contributionType = paramIndexes.values().iterator().next();
 		if (contributionType.equals(OrderedConfiguration.class)) {
