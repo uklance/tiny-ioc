@@ -8,6 +8,7 @@ import static org.junit.Assert.fail;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -442,7 +443,8 @@ public class ServiceRegistryTest {
 		ListBean listBean = registry.getService(ListBean.class);
 		assertEquals(Arrays.asList("value4", "value3", "value6", "value5"), listBean.getList());
 		
-		CollectionBean collectionBean = registry.getService(CollectionBean.class);
-		assertEquals(Arrays.asList("value6", "value7", "value8"), collectionBean.getCollection());
+		Set<String> expectedCollection = new LinkedHashSet<>(Arrays.asList("value6", "value7", "value8"));
+		Set<String> actualCollection = new LinkedHashSet<>(registry.getService(CollectionBean.class).getCollection());
+		assertEquals(expectedCollection, actualCollection);
 	}
 }

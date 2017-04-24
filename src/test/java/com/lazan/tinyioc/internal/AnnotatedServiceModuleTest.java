@@ -213,7 +213,7 @@ public class AnnotatedServiceModuleTest {
 		}		
 	}
 	
-	@SuppressWarnings("rawtypes")
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Test
 	public void testContribute() {
 		ServiceRegistry registry = buildRegistry(ContributeModule.class);
