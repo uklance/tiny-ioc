@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.junit.Test;
@@ -253,8 +254,45 @@ public class AnnotatedServiceModuleTest {
 		ServiceRegistry registry = buildRegistry(ContributeModule2.class);
 		String foo = registry.getService("foo", String.class);
 		assertEquals("list=[a],map={b=2},collection=[3]", foo);
+	}
+	
+	public static class ContributeModule3 {
+		@Bind
+		public void bind(ServiceBinder binder) {
+			binder.bind(InjectMe.class);
+		}
+		@Contribute(serviceType=InjectMe.class)
+		public void contribute1(OrderedConfiguration<String> config) {
+			config.add("c1", "a");
+		}
+		@Contribute(serviceType=InjectMe.class)
+		public void contribute2(MappedConfiguration<String, Long> config) {
+			config.add("c1", "b", 2L);
+		}
+		@Contribute(serviceType=InjectMe.class)
+		public void contribute3(UnorderedConfiguration<Integer> config) {
+			config.add("c1", 3);
+		}
 	}	
-
+	
+	public static class InjectMe {
+		@Inject private List<String> list;
+		@Inject private Map<String, String> map;
+		@Inject private Collection<String> collection;
+		
+		@Override
+		public String toString() {
+			return String.format("list=%s,map=%s,collection=%s", list, map, collection);
+		}
+	}
+	
+	@Test
+	public void testContribute3() {
+		ServiceRegistry registry = buildRegistry(ContributeModule3.class);
+		String stringValue = registry.getService(InjectMe.class).toString();
+		assertEquals("list=[a],map={b=2},collection=[3]", stringValue);
+	}	
+		
 	private ServiceRegistry buildRegistry(Class<?>... moduleTypes) {
 		return new ServiceRegistryBuilder().withModuleTypes(moduleTypes).build();
 	}

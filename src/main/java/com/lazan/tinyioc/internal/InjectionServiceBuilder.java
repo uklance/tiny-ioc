@@ -3,6 +3,10 @@ package com.lazan.tinyioc.internal;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -14,13 +18,35 @@ import com.lazan.tinyioc.ServiceRegistry;
 
 @SuppressWarnings({ "rawtypes", "unchecked" })
 public class InjectionServiceBuilder<T> implements ServiceBuilder<T> {
+	static final Map<Class<?>, ContextValueSource> CONTEXT_VALUE_SOURCES = new LinkedHashMap<>();
+	static {
+		CONTEXT_VALUE_SOURCES.put(Map.class, new ContextValueSource<Map>() {
+			@Override
+			public Map getValue(ServiceBuilderContext context) {
+				return context.getMappedContributions();
+			}
+		});
+		CONTEXT_VALUE_SOURCES.put(List.class, new ContextValueSource<List>() {
+			@Override
+			public List getValue(ServiceBuilderContext context) {
+				return context.getOrderedContributions();
+			}
+		});
+		CONTEXT_VALUE_SOURCES.put(Collection.class, new ContextValueSource<Collection>() {
+			@Override
+			public Collection getValue(ServiceBuilderContext context) {
+				return context.getUnorderedContributions();
+			}
+		});
+	}
+	
 	private final Class<T> concreteType;
 	
 	public InjectionServiceBuilder(Class<T> concreteType) {
 		super();
 		this.concreteType = concreteType;
 	}
-
+	
 	@Override
 	public T build(ServiceBuilderContext context) {
 		try {
@@ -56,6 +82,8 @@ public class InjectionServiceBuilder<T> implements ServiceBuilder<T> {
 		Object param;
 		if (named != null) {
 			param = registry.getService(named.value(), paramType);
+		} else if (CONTEXT_VALUE_SOURCES.containsKey(paramType)) {
+			param = CONTEXT_VALUE_SOURCES.get(paramType).getValue(context);
 		} else {
 			param = registry.getService(paramType);
 		}
@@ -95,11 +123,15 @@ public class InjectionServiceBuilder<T> implements ServiceBuilder<T> {
 		}
 		throw new IocException("Found %s public constructors annotated with javax.inject.Inject for type %s", injectCount, concreteType.getName());
 	}
-
+	
+	static interface ContextValueSource<T> {
+		T getValue(ServiceBuilderContext context);
+	}
+	
 	protected void injectFields(T service, ServiceBuilderContext context) {
 		Class<?> currentType = context.getServiceType();
 		ServiceRegistry registry = context.getServiceRegistry();
-		while (currentType != null){ 
+		while (currentType != null) { 
 			for (Field field : currentType.getDeclaredFields()) {
 				if (field.getAnnotation(Inject.class) != null) {
 					Named named = field.getAnnotation(Named.class);
@@ -107,6 +139,8 @@ public class InjectionServiceBuilder<T> implements ServiceBuilder<T> {
 						Object value;
 						if (named != null) {
 							value = registry.getService(named.value(), field.getType());
+						} else if (CONTEXT_VALUE_SOURCES.containsKey(field.getType())) {
+							value = CONTEXT_VALUE_SOURCES.get(field.getType()).getValue(context);
 						} else {
 							value = registry.getService(field.getType());
 						}
