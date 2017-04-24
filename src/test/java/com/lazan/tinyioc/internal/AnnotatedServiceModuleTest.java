@@ -148,12 +148,12 @@ public class AnnotatedServiceModuleTest {
 	}
 	
 	public static class EagerLoadModule {
-		@Service(value="service1", eagerLoad=true)
+		@Service(serviceId="service1", eagerLoad=true)
 		public String service1(@Named("list") List<String> instances) {
 			instances.add("service1");
 			return "foo";
 		}
-		@Service(value="service2", eagerLoad=false)
+		@Service(serviceId="service2", eagerLoad=false)
 		public String service2(@Named("list") List<String> instances) {
 			instances.add("service2");
 			return "foo";
@@ -231,7 +231,7 @@ public class AnnotatedServiceModuleTest {
 	}	
 	
 	public static class ContributeModule2 {
-		@Service("foo")
+		@Service(serviceId="foo")
 		public String foo(List<String> list, Map<String, Long> map, Collection<Integer> collection) {
 			return String.format("list=%s,map=%s,collection=%s", list, map, collection);
 		}

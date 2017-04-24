@@ -8,6 +8,6 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
 public @interface Service {
-	String value() default "";
+	String serviceId() default "";
 	boolean eagerLoad() default false;
 }
