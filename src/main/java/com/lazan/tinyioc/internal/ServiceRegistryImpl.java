@@ -46,18 +46,6 @@ public class ServiceRegistryImpl implements ServiceRegistry {
 					throw new IocException("Invalid override for serviceId '%s' (expected serviceType %s, found %s)", 
 							serviceId, candidate.getServiceType().getName(), override.getServiceType().getName());
 				}
-				if (!override.getContributionType().equals(candidate.getContributionType())) {
-					throw new IocException("Invalid override for serviceId '%s' (expected contributionType %s, found %s)", 
-							serviceId, candidate.getContributionType(), override.getContributionType());
-				}
-				if (!isEqual(override.getContributionKeyType(), candidate.getContributionKeyType())) {
-					throw new IocException("Invalid override for serviceId '%s' (expected contributionKeyType %s, found %s)", 
-							serviceId, candidate.getContributionKeyType().getName(), override.getContributionKeyType().getName());
-				}
-				if (!isEqual(override.getContributionValueType(), candidate.getContributionValueType())) {
-					throw new IocException("Invalid override for serviceId '%s' (expected contributionValueType %s, found %s)", 
-							serviceId, candidate.getContributionValueType().getName(), override.getContributionValueType().getName());
-				}
 			}
 			ServiceBinderOptionsImpl options = override == null ? candidate : override;
 			List<ServiceDecorator<?>> decorators = buildServiceDecorators(serviceId, serviceType, decoratorMap);
@@ -68,7 +56,6 @@ public class ServiceRegistryImpl implements ServiceRegistry {
 			@SuppressWarnings({"unchecked", "rawtypes"})
 			ServiceReference<?> reference = new ServiceReference(
 					serviceId, serviceType, options.getServiceBuilder(), options.isEagerLoad(), decorators, 
-					options.getContributionType(), options.getContributionKeyType(), options.getContributionValueType(), 
 					unorderedContributions, orderedContributions, mappedContributions);
 			_referencesById.put(serviceId, reference);
 
@@ -97,16 +84,6 @@ public class ServiceRegistryImpl implements ServiceRegistry {
 
 		for (ServiceReference<?> reference : referencesById.values()) {
 			reference.init(this);
-		}
-	}
-	
-	private boolean isEqual(Object o1, Object o2) {
-		if (o1 == null) {
-			return o2 == null;
-		} else if (o2 == null) {
-			return false;
-		} else {
-			return o1.equals(o2);
 		}
 	}
 	

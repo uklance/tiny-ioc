@@ -22,14 +22,10 @@ public class ServiceReference<T> {
 		private final Class<T> serviceType;
 		private final ServiceBuilder<T> builder;
 		private final List<ServiceDecorator<T>> decorators;
-		private final ContributionType contributionType;
-		private final Class<?> contributionKeyType;
-		private final Class<?> contributionValueType;
 		private final List<UnorderedContributor<?>> unorderedContributions;
 		private final List<OrderedContributor<?>> orderedContributions;
 		private final List<MappedContributor<?,?>> mappedContributions;
 		public ServiceDependencies(Class<T> serviceType, ServiceBuilder<T> builder, List<ServiceDecorator<T>> decorators,
-				ContributionType contributionType, Class<?> contributionKeyType, Class<?> contributionValueType,
 				List<UnorderedContributor<?>> unorderedContributions,
 				List<OrderedContributor<?>> orderedContributions,
 				List<MappedContributor<?, ?>> mappedContributions) {
@@ -37,9 +33,6 @@ public class ServiceReference<T> {
 			this.serviceType = serviceType;
 			this.builder = builder;
 			this.decorators = decorators;
-			this.contributionType = contributionType;
-			this.contributionKeyType = contributionKeyType;
-			this.contributionValueType = contributionValueType;
 			this.unorderedContributions = unorderedContributions;
 			this.orderedContributions = orderedContributions;
 			this.mappedContributions = mappedContributions;
@@ -52,15 +45,15 @@ public class ServiceReference<T> {
 	private volatile Object service;
 	
 	public ServiceReference(String serviceId, Class<T> serviceType, ServiceBuilder<T> builder, boolean eagerLoad,
-			List<ServiceDecorator<T>> decorators, ContributionType contributionType, Class<?> contributionKeyType,
-			Class<?> contributionValueType, List<UnorderedContributor<?>> unorderedContributions,
+			List<ServiceDecorator<T>> decorators, 
+			List<UnorderedContributor<?>> unorderedContributions,
 			List<OrderedContributor<?>> orderedContributions,
 			List<MappedContributor<?, ?>> mappedContributions) {
 		super();
 		this.serviceId = serviceId;
 		this.eagerLoad = eagerLoad;
 		this.dependencies = new ServiceDependencies(
-				serviceType, builder, decorators, contributionType, contributionKeyType, contributionValueType, 
+				serviceType, builder, decorators, 
 				unorderedContributions, orderedContributions, mappedContributions
 		);
 	}
@@ -75,22 +68,9 @@ public class ServiceReference<T> {
 			}
 			ServiceRegistryImpl registryWrapper = new ServiceRegistryImpl(registry, serviceId);
 			ServiceBuilderContextImpl context = new ServiceBuilderContextImpl(registryWrapper, serviceId, dependencies.serviceType);
-			
-			switch (dependencies.contributionType) {
-				case NONE:
-					break;
-				case MAPPED: 
-					context.setMappedContributions(dependencies.contributionKeyType, dependencies.contributionValueType, buildMappedContributions(context));
-					break;
-				case ORDERED:
-					context.setOrderedContributions(dependencies.contributionValueType, buildOrderedContributions(context));
-					break;
-				case UNORDERED:
-					context.setUnorderedContributions(dependencies.contributionValueType, buildUnorderedContributions(context));
-					break;
-				default:
-					throw new IocException("Unsupported contributiontype %s", dependencies.contributionType);
-			}
+			context.setMappedContributions(buildMappedContributions(context));
+			context.setOrderedContributions(buildOrderedContributions(context));
+			context.setUnorderedContributions(buildUnorderedContributions(context));
 			T candidate = dependencies.builder.build(context);
 			if (dependencies.decorators != null) {
 				for (ServiceDecorator<T> decorator : dependencies.decorators) {
@@ -118,7 +98,7 @@ public class ServiceReference<T> {
 		}
 		UnorderedConfigurationImpl configuration = new UnorderedConfigurationImpl();
 		for (UnorderedContributor contributor : dependencies.unorderedContributions) {
-			contributor.contribute(configuration);
+			contributor.contribute(context, configuration);
 		}
 		Map<String, UnorderedConfigurationImpl.Entry> entryMap = new LinkedHashMap<>();
 		List<UnorderedConfigurationImpl.Entry> entries = configuration.getEntries();
@@ -129,7 +109,7 @@ public class ServiceReference<T> {
 		for (UnorderedConfigurationImpl.Entry entry : entryMap.values()) {
 			values.add(entry.getValueBuilder().build(context));
 		}
-		return Collections.unmodifiableList(values);
+		return Collections.unmodifiableCollection(values);
 	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
@@ -139,7 +119,7 @@ public class ServiceReference<T> {
 		}
 		OrderedConfigurationImpl configuration = new OrderedConfigurationImpl();
 		for (OrderedContributor contributor : dependencies.orderedContributions) {
-			contributor.contribute(configuration);
+			contributor.contribute(context, configuration);
 		}
 		List<OrderedConfigurationImpl.Entry> entries = configuration.getEntries();
 		Collections.sort(entries);
@@ -161,7 +141,7 @@ public class ServiceReference<T> {
 		}
 		MappedConfigurationImpl configuration = new MappedConfigurationImpl();
 		for (MappedContributor contributor : dependencies.mappedContributions) {
-			contributor.contribute(configuration);
+			contributor.contribute(context, configuration);
 		}
 		List<MappedConfigurationImpl.Entry> entries = configuration.getEntries();
 		Map<String, MappedConfigurationImpl.Entry> entryMap = new LinkedHashMap<>();

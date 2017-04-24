@@ -20,7 +20,6 @@ import javax.inject.Named;
 import org.junit.Test;
 
 import com.lazan.tinyioc.annotations.Bind;
-import com.lazan.tinyioc.internal.ContributionType;
 
 public class ServiceRegistryTest {
 	public static class Child {}
@@ -367,6 +366,7 @@ public class ServiceRegistryTest {
 		}
 	}
 	
+	@SuppressWarnings("unchecked")
 	@Test
 	public void testContributions() {
 		ServiceModule module = new ServiceModule() {
@@ -375,43 +375,36 @@ public class ServiceRegistryTest {
 				binder.bind(MapBean.class, new ServiceBuilder<MapBean>() {
 					@Override
 					public MapBean build(ServiceBuilderContext context) {
-						assertEquals(ContributionType.MAPPED, context.getContributionType());
-						assertEquals(String.class, context.getContributionKeyType());
-						assertEquals(String.class, context.getContributionValueType());
-						return new MapBean(context.getMappedContributions(String.class, String.class));
+						return new MapBean(context.getMappedContributions());
 					}
-				}).withMappedContribution(String.class, String.class);
+				});
 				binder.bind(ListBean.class, new ServiceBuilder<ListBean>() {
 					@Override
 					public ListBean build(ServiceBuilderContext context) {
-						assertEquals(ContributionType.ORDERED, context.getContributionType());
-						assertEquals(String.class, context.getContributionValueType());
-						return new ListBean(context.getOrderedContributions(String.class));
+						return new ListBean(context.getOrderedContributions());
 					}
-				}).withOrderedContribution(String.class);
+				});
 				binder.bind(CollectionBean.class, new ServiceBuilder<CollectionBean>() {
 					@Override
 					public CollectionBean build(ServiceBuilderContext context) {
-						assertEquals(ContributionType.UNORDERED, context.getContributionType());
-						assertEquals(String.class, context.getContributionValueType());
-						return new CollectionBean(context.getUnorderedContributions(String.class));
+						return new CollectionBean(context.getUnorderedContributions());
 					}
-				}).withUnorderedContribution(String.class);
+				});
 				binder.contribute("mapBean", new MappedContributor<String, String>() {
 					@Override
-					public void contribute(MappedConfiguration<String, String> configuration) {
+					public void contribute(ServiceBuilderContext context, MappedConfiguration<String, String> configuration) {
 						configuration.add("c1", "key1", "value1");
 					}
 				});
 				binder.contribute(MapBean.class, new MappedContributor<String, String>() {
 					@Override
-					public void contribute(MappedConfiguration<String, String> configuration) {
+					public void contribute(ServiceBuilderContext context, MappedConfiguration<String, String> configuration) {
 						configuration.add("c2", "key2", "value2");
 					}
 				});
 				binder.contribute("listBean", new OrderedContributor<String>() {
 					@Override
-					public void contribute(OrderedConfiguration<String> configuration) {
+					public void contribute(ServiceBuilderContext context, OrderedConfiguration<String> configuration) {
 						configuration.add("c3", "value3");
 						configuration.add("c4", "value4").before("c3");
 						configuration.add("c5", "value5").after("*");
@@ -419,20 +412,20 @@ public class ServiceRegistryTest {
 				});
 				binder.contribute(ListBean.class, new OrderedContributor<String>() {
 					@Override
-					public void contribute(OrderedConfiguration<String> configuration) {
+					public void contribute(ServiceBuilderContext context, OrderedConfiguration<String> configuration) {
 						configuration.add("c6", "value6").after("c4");
 					}
 				});
 				binder.contribute("collectionBean", new UnorderedContributor<String>() {
 					@Override
-					public void contribute(UnorderedConfiguration<String> configuration) {
+					public void contribute(ServiceBuilderContext context, UnorderedConfiguration<String> configuration) {
 						configuration.add("c6", "value6");
 						configuration.add("c7", "value7");
 					}
 				});
 				binder.contribute(CollectionBean.class, new UnorderedContributor<String>() {
 					@Override
-					public void contribute(UnorderedConfiguration<String> configuration) {
+					public void contribute(ServiceBuilderContext context, UnorderedConfiguration<String> configuration) {
 						configuration.add("c8", "value8");
 					}
 				});

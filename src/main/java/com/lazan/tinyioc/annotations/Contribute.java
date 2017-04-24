@@ -7,7 +7,7 @@ import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
-public @interface ServiceOverride {
-	String value();
-	boolean eagerLoad() default false;
+public @interface Contribute {
+	String serviceId() default "";
+	Class<?> serviceType() default void.class;
 }

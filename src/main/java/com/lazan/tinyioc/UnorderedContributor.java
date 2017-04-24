@@ -1,5 +1,5 @@
 package com.lazan.tinyioc;
 
 public interface UnorderedContributor<T> {
-	void contribute(UnorderedConfiguration<T> configuration);
+	void contribute(ServiceBuilderContext context, UnorderedConfiguration<T> configuration);
 }

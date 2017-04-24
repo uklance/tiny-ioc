@@ -4,18 +4,14 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-import com.lazan.tinyioc.IocException;
 import com.lazan.tinyioc.ServiceBuilderContext;
 import com.lazan.tinyioc.ServiceRegistry;
 
-@SuppressWarnings({"rawtypes", "unchecked"})
+@SuppressWarnings("rawtypes")
 public class ServiceBuilderContextImpl implements ServiceBuilderContext {
 	private final ServiceRegistry registry;
 	private final String serviceId;
 	private final Class<?> serviceType;
-	private ContributionType contributionType;
-	private Class<?> contributionKeyType;
-	private Class<?> contributionValueType;
 	private Collection unorderedContributions;
 	private List orderedContributions;
 	private Map mappedContributions;
@@ -27,22 +23,15 @@ public class ServiceBuilderContextImpl implements ServiceBuilderContext {
 		this.serviceType = serviceType;
 	}
 	
-	void setOrderedContributions(Class<?> valueType, List contributions) {
-		this.contributionType = ContributionType.ORDERED;
-		this.contributionValueType = valueType;
+	void setOrderedContributions(List contributions) {
 		this.orderedContributions = contributions;
 	}
 
-	void setUnorderedContributions(Class<?> valueType, Collection contributions) {
-		this.contributionType = ContributionType.UNORDERED;
-		this.contributionValueType = valueType;
+	void setUnorderedContributions(Collection contributions) {
 		this.unorderedContributions = contributions;
 	}
 
-	void setMappedContributions(Class<?> keyType, Class<?> valueType, Map contributions) {
-		this.contributionType = ContributionType.MAPPED;
-		this.contributionKeyType = keyType;
-		this.contributionValueType = valueType;
+	void setMappedContributions(Map contributions) {
 		this.mappedContributions = contributions;
 	}
 	
@@ -62,37 +51,17 @@ public class ServiceBuilderContextImpl implements ServiceBuilderContext {
 	}
 	
 	@Override
-	public ContributionType getContributionType() {
-		return contributionType;
-	}
-	
-	@Override
-	public <K, V> Map<K, V> getMappedContributions(Class<K> keyType, Class<V> valueType) {
-		if (contributionType != ContributionType.MAPPED) throw new IocException("Cannot get mapped contributions for service %s (contributionType=%s)", serviceId, contributionType);
+	public Map getMappedContributions() {
 		return mappedContributions;
 	}
 	
 	@Override
-	public <V> List<V> getOrderedContributions(Class<V> valueType) {
-		if (contributionType != ContributionType.ORDERED) throw new IocException("Cannot get ordered contributions for service %s (contributionType=%s)", serviceId, contributionType);
+	public List getOrderedContributions() {
 		return orderedContributions;
 	}
 	
 	@Override
-	public <V> Collection<V> getUnorderedContributions(Class<V> valueType) {
-		if (contributionType != ContributionType.UNORDERED) throw new IocException("Cannot get unordered contributions for service %s (contributionType=%s)", serviceId, contributionType);
+	public Collection getUnorderedContributions() {
 		return unorderedContributions;
-	}
-	
-	@Override
-	public Class<?> getContributionKeyType() {
-		if (contributionType != ContributionType.MAPPED) throw new IocException("Cannot get contribution key type for service %s (contributionType=%s)", serviceId, contributionType);
-		return contributionKeyType;
-	}
-	
-	@Override
-	public Class<?> getContributionValueType() {
-		if (contributionType == null) throw new IocException("Cannot get contribution value type for service %s (contributionType=%s)", serviceId, contributionType);
-		return contributionValueType;
 	}
 }
