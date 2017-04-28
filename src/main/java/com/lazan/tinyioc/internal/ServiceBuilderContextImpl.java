@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+import com.lazan.tinyioc.IocException;
 import com.lazan.tinyioc.ServiceBuilderContext;
 import com.lazan.tinyioc.ServiceRegistry;
 
@@ -52,16 +53,25 @@ public class ServiceBuilderContextImpl implements ServiceBuilderContext {
 	
 	@Override
 	public Map getMappedContributions() {
+		if (mappedContributions == null) {
+			throw new IocException("Circular dependency encountered accessing mappedContributions for " + getServiceId());
+		}
 		return mappedContributions;
 	}
 	
 	@Override
 	public List getOrderedContributions() {
+		if (orderedContributions == null) {
+			throw new IocException("Circular dependency encountered accessing orderedContributions for " + getServiceId());
+		}
 		return orderedContributions;
 	}
 	
 	@Override
 	public Collection getUnorderedContributions() {
+		if (unorderedContributions == null) {
+			throw new IocException("Circular dependency encountered accessing unorderedContributions for " + getServiceId());
+		}
 		return unorderedContributions;
 	}
 }
