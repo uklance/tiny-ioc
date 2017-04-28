@@ -79,7 +79,7 @@ public class ServiceReference<T> {
 					T candidate = dependencies.builder.build(context);
 					if (dependencies.decorators != null) {
 						for (ServiceDecorator<T> decorator : dependencies.decorators) {
-							candidate = decorator.decorate(candidate, context);
+							candidate = decorator.decorate(context, candidate);
 						}
 					}
 					service = candidate;

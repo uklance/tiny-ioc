@@ -222,7 +222,7 @@ public class ServiceRegistryTest {
 		}
 		
 		@Override
-		public String decorate(String delegate, ServiceBuilderContext context) {
+		public String decorate(ServiceBuilderContext context, String delegate) {
 			return String.format(pattern, delegate);
 		}
 	}
