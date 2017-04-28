@@ -267,7 +267,7 @@ public class AnnotatedServiceModule implements ServiceModule {
 	@SuppressWarnings({"rawtypes", "unchecked"})
 	protected void decorate(Object instance, Method method, Decorate annotation, ServiceBinder binder) {
 		ServiceDecoratorOptions options = binder.decorate(method.getReturnType(), annotation.decoratorId(), new ServiceDecorator() {
-			public Object decorate(final Object delegate, ServiceBuilderContext context) {
+			public Object decorate(ServiceBuilderContext context, Object delegate) {
 				ParameterProvider paramProvider = new ParameterProvider() {
 					@Override
 					public boolean canProvide(Named named, Class<?> paramType) {
