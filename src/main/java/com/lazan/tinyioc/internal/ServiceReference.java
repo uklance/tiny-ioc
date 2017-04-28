@@ -1,4 +1,4 @@
-package com.lazan.tinyioc.internal;
+	package com.lazan.tinyioc.internal;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -8,6 +8,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
 
 import com.lazan.tinyioc.IocException;
 import com.lazan.tinyioc.MappedContributor;
@@ -42,7 +43,7 @@ public class ServiceReference<T> {
 	private final String serviceId;
 	private final boolean eagerLoad;
 	private ServiceDependencies dependencies;
-	private volatile Object service;
+	private final AtomicReference<Object> reference = new AtomicReference<>();
 	
 	public ServiceReference(String serviceId, Class<T> serviceType, ServiceBuilder<T> builder, boolean eagerLoad,
 			List<ServiceDecorator<T>> decorators, 
@@ -58,29 +59,36 @@ public class ServiceReference<T> {
 		);
 	}
 
-	public synchronized Object get(ServiceRegistryImpl registry) {
+	public Object get(ServiceRegistryImpl registry) {
+		Object service = reference.get();
 		if (service == null) {
-			Set<String> serviceIdStack = registry.getServiceIdStack();
-			if (serviceIdStack.contains(serviceId)) {
-				List<String> references = new LinkedList<>(serviceIdStack);
-				references.add(serviceId);
-				throw new IocException("Circular dependency reference detected %s", references);
-			}
-			ServiceRegistryImpl registryWrapper = new ServiceRegistryImpl(registry, serviceId);
-			ServiceBuilderContextImpl context = new ServiceBuilderContextImpl(registryWrapper, serviceId, dependencies.serviceType);
-			context.setMappedContributions(buildMappedContributions(context));
-			context.setOrderedContributions(buildOrderedContributions(context));
-			context.setUnorderedContributions(buildUnorderedContributions(context));
-			T candidate = dependencies.builder.build(context);
-			if (dependencies.decorators != null) {
-				for (ServiceDecorator<T> decorator : dependencies.decorators) {
-					candidate = decorator.decorate(candidate, context);
+			synchronized(reference) {
+				service = reference.get();
+				if (service == null) {
+					Set<String> serviceIdStack = registry.getServiceIdStack();
+					if (serviceIdStack.contains(serviceId)) {
+						List<String> references = new LinkedList<>(serviceIdStack);
+						references.add(serviceId);
+						throw new IocException("Circular dependency reference detected %s", references);
+					}
+					ServiceRegistryImpl registryWrapper = new ServiceRegistryImpl(registry, serviceId);
+					ServiceBuilderContextImpl context = new ServiceBuilderContextImpl(registryWrapper, serviceId, dependencies.serviceType);
+					context.setMappedContributions(buildMappedContributions(context));
+					context.setOrderedContributions(buildOrderedContributions(context));
+					context.setUnorderedContributions(buildUnorderedContributions(context));
+					T candidate = dependencies.builder.build(context);
+					if (dependencies.decorators != null) {
+						for (ServiceDecorator<T> decorator : dependencies.decorators) {
+							candidate = decorator.decorate(candidate, context);
+						}
+					}
+					service = candidate;
+					reference.set(service);
+					
+					// allow dependencies to be garbage collected
+					dependencies = null;
 				}
 			}
-			service = candidate;
-			
-			// allow dependencies to be garbage collected
-			dependencies = null;
 		}
 		return service;
 	}
