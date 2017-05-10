@@ -10,4 +10,5 @@ public interface ServiceRegistry {
 	Object getService(String serviceId);
 	<T> T getService(String serviceId, Class<T> serviceType);
 	<T> Map<String, T> getServices(Class<T> serviceType);
+	<T> T autobuild(Class<T> concreteType);
 }

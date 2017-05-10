@@ -29,6 +29,7 @@ import com.lazan.tinyioc.ServiceModule;
 import com.lazan.tinyioc.ServiceRegistry;
 import com.lazan.tinyioc.UnorderedConfiguration;
 import com.lazan.tinyioc.UnorderedContributor;
+import com.lazan.tinyioc.annotations.Autobuild;
 import com.lazan.tinyioc.annotations.Bind;
 import com.lazan.tinyioc.annotations.Contribute;
 import com.lazan.tinyioc.annotations.Decorate;
@@ -308,8 +309,14 @@ public class AnnotatedServiceModule implements ServiceModule {
 		for (int i = 0; i < paramTypes.length; ++i) {
 			Class<?> paramType = paramTypes[i];
 			Named named = findAnnotation(paramAnnotations[i], Named.class);
+			Autobuild autobuild = findAnnotation(paramAnnotations[i], Autobuild.class);
+			if (named != null && autobuild != null) {
+				throw new IocException("Found @Named and Autobuild on argument %s of %s.%s", i, method.getDeclaringClass().getSimpleName(), method.getName());
+			}
 			Object param;
-			if (provider != null && provider.canProvide(named, paramType)) {
+			if (autobuild != null) {
+				param = registry.autobuild(paramType);
+			} else if (provider != null && provider.canProvide(named, paramType)) {
 				param = provider.provide(named, paramType);
 			} else  {
 				try {

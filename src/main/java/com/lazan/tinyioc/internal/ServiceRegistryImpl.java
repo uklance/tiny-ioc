@@ -219,6 +219,11 @@ public class ServiceRegistryImpl implements ServiceRegistry {
 		return referencesByType.keySet();
 	}
 	
+	@Override
+	public <T> T autobuild(Class<T> concreteType) {
+		return getService(Autobuilder.class).autobuild(this, concreteType);
+	}
+	
 	public Set<String> getServiceIdStack() {
 		return idStack;
 	}

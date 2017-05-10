@@ -25,6 +25,7 @@ import com.lazan.tinyioc.ServiceBinder;
 import com.lazan.tinyioc.ServiceRegistry;
 import com.lazan.tinyioc.ServiceRegistryBuilder;
 import com.lazan.tinyioc.UnorderedConfiguration;
+import com.lazan.tinyioc.annotations.Autobuild;
 import com.lazan.tinyioc.annotations.Bind;
 import com.lazan.tinyioc.annotations.Contribute;
 import com.lazan.tinyioc.annotations.Decorate;
@@ -291,8 +292,31 @@ public class AnnotatedServiceModuleTest {
 		ServiceRegistry registry = buildRegistry(ContributeModule3.class);
 		String stringValue = registry.getService(InjectMe.class).toString();
 		assertEquals("list=[a],map={b=2},collection=[3]", stringValue);
-	}	
+	}
+	
+	public static class AutobuildMe {
+		@Inject @Named("foo")
+		private String foo;
+	}
+	
+	public static class AutobuildModule {
+		@Bind
+		public void bind(ServiceBinder binder) {
+			binder.bind(String.class, "a").withServiceId("foo");
+		}
 		
+		@Service(serviceId="bar")
+		public String buildBar(@Autobuild AutobuildMe autobuildMe) {
+			return String.format("x%sx", autobuildMe.foo);
+		}
+	}
+	
+	@Test
+	public void testAutobuild() {
+		ServiceRegistry registry = buildRegistry(AutobuildModule.class);
+		assertEquals("xax", registry.getService("bar"));
+	}
+	
 	private ServiceRegistry buildRegistry(Class<?>... moduleTypes) {
 		return new ServiceRegistryBuilder().withModuleTypes(moduleTypes).build();
 	}
