@@ -47,7 +47,7 @@ public class MappedConfigurationImpl<K, V> implements MappedConfiguration<K, V> 
 
 	@Override
 	public void add(String contributionId, K key, Class<? extends V> type) {
-		add(contributionId, key, new InjectionServiceBuilder<>(type));
+		add(contributionId, key, new AutobuildServiceBuilder<>(type));
 	}
 	
 	public List<Entry<K, V>> getEntries() {

@@ -79,7 +79,7 @@ public class OrderedConfigurationImpl<T> implements OrderedConfiguration<T> {
 
 	@Override
 	public OrderedContributionOptions add(String contributionId, Class<? extends T> type) {
-		return add(contributionId, new InjectionServiceBuilder<>(type));
+		return add(contributionId, new AutobuildServiceBuilder<>(type));
 	}
 
 	@Override

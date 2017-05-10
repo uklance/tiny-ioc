@@ -36,7 +36,7 @@ public class UnorderedConfigurationImpl<T> implements UnorderedConfiguration<T> 
 
 	@Override
 	public void add(String contributionId, Class<? extends T> type) {
-		add(contributionId, new InjectionServiceBuilder<>(type));
+		add(contributionId, new AutobuildServiceBuilder<>(type));
 	}
 
 	@Override

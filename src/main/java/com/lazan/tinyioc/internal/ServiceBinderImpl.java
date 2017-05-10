@@ -24,7 +24,7 @@ public class ServiceBinderImpl implements ServiceBinder {
 
 	@Override
 	public <T> ServiceBinderOptions bind(Class<T> serviceType) {
-		return bind(serviceType, new InjectionServiceBuilder<>(serviceType));
+		return bind(serviceType, new AutobuildServiceBuilder<>(serviceType));
 	}
 	
 	@Override
@@ -34,7 +34,7 @@ public class ServiceBinderImpl implements ServiceBinder {
 	
 	@Override
 	public <T> ServiceBinderOptions bind(Class<T> serviceType, Class<? extends T> concreteType) {
-		return bind(serviceType, new InjectionServiceBuilder<>(concreteType));
+		return bind(serviceType, new AutobuildServiceBuilder<>(concreteType));
 	}
 	
 	@Override
@@ -46,7 +46,7 @@ public class ServiceBinderImpl implements ServiceBinder {
 	
 	@Override
 	public <T> ServiceBinderOptions override(Class<T> serviceType, Class<? extends T> concreteType) {
-		return override(serviceType, new InjectionServiceBuilder<>(concreteType));
+		return override(serviceType, new AutobuildServiceBuilder<>(concreteType));
 	}
 	
 	@Override

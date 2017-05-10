@@ -26,11 +26,13 @@ public class ServiceReference<T> {
 		private final List<UnorderedContributor<?>> unorderedContributions;
 		private final List<OrderedContributor<?>> orderedContributions;
 		private final List<MappedContributor<?,?>> mappedContributions;
-		public ServiceDependencies(Class<T> serviceType, ServiceBuilder<T> builder, List<ServiceDecorator<T>> decorators,
+		public ServiceDependencies(
+				Class<T> serviceType, 
+				ServiceBuilder<T> builder, 
+				List<ServiceDecorator<T>> decorators,
 				List<UnorderedContributor<?>> unorderedContributions,
 				List<OrderedContributor<?>> orderedContributions,
 				List<MappedContributor<?, ?>> mappedContributions) {
-			super();
 			this.serviceType = serviceType;
 			this.builder = builder;
 			this.decorators = decorators;
@@ -100,7 +102,7 @@ public class ServiceReference<T> {
 	}
 	
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	private Collection<Object> buildUnorderedContributions(ServiceBuilderContext context) {
+	protected Collection<Object> buildUnorderedContributions(ServiceBuilderContext context) {
 		if (dependencies.unorderedContributions == null) {
 			return Collections.emptyList();
 		}
@@ -121,7 +123,7 @@ public class ServiceReference<T> {
 	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	private List<Object> buildOrderedContributions(ServiceBuilderContext context) {
+	protected List<Object> buildOrderedContributions(ServiceBuilderContext context) {
 		if (dependencies.orderedContributions == null) {
 			return Collections.emptyList();
 		}
@@ -143,7 +145,7 @@ public class ServiceReference<T> {
 	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	private Map<Object, Object> buildMappedContributions(ServiceBuilderContext context) {
+	protected Map<Object, Object> buildMappedContributions(ServiceBuilderContext context) {
 		if (dependencies.mappedContributions == null) {
 			return Collections.emptyMap();
 		}

@@ -4,10 +4,10 @@ import com.lazan.tinyioc.Autobuilder;
 import com.lazan.tinyioc.ServiceBuilder;
 import com.lazan.tinyioc.ServiceBuilderContext;
 
-public class InjectionServiceBuilder<T> implements ServiceBuilder<T> {
+public class AutobuildServiceBuilder<T> implements ServiceBuilder<T> {
 	private final Class<T> concreteType;
 	
-	public InjectionServiceBuilder(Class<T> concreteType) {
+	public AutobuildServiceBuilder(Class<T> concreteType) {
 		super();
 		this.concreteType = concreteType;
 	}
