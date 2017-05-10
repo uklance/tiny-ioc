@@ -20,7 +20,7 @@ import com.lazan.tinyioc.ServiceBuilderContext;
 import com.lazan.tinyioc.ServiceRegistry;
 
 @RunWith(MockitoJUnitRunner.class)
-public class InjectionServiceBuilderTest {
+public class AutobuilderImplTest {
 	@Mock
 	private ServiceRegistry registry;
 	
@@ -147,6 +147,6 @@ public class InjectionServiceBuilderTest {
 	
 	private <T> T build(Class<T> type) {
 		ServiceBuilderContext context = new ServiceBuilderContextImpl(registry, "testService", type);
-		return new InjectionServiceBuilder<>(type).build(context);
+		return new AutobuilderImpl().autobuild(context, type);
 	}
 }

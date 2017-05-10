@@ -8,7 +8,6 @@ import static org.junit.Assert.fail;
 
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -119,8 +118,8 @@ public class ServiceRegistryTest {
 		assertEquals("hello", ns.string1);
 		assertEquals("world", ns.string2);
 		
-		assertEquals(createSet("string1", "string2", "namedStrings"), registry.getServiceIds());
-		assertEquals(createSet(String.class, NamedStrings.class), registry.getServiceTypes());
+		assertEquals(createSet("string1", "string2", "namedStrings", "autobuilder"), registry.getServiceIds());
+		assertEquals(createSet(String.class, NamedStrings.class, Autobuilder.class), registry.getServiceTypes());
 		Map<String, String> expected = new HashMap<>();
 		expected.put("string1",  "hello");
 		expected.put("string2",  "world");

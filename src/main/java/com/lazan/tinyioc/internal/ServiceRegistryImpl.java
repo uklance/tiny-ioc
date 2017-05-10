@@ -8,15 +8,30 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.lazan.tinyioc.Autobuilder;
 import com.lazan.tinyioc.IocException;
 import com.lazan.tinyioc.MappedContributor;
 import com.lazan.tinyioc.OrderedContributor;
+import com.lazan.tinyioc.ServiceBinder;
+import com.lazan.tinyioc.ServiceBuilder;
+import com.lazan.tinyioc.ServiceBuilderContext;
 import com.lazan.tinyioc.ServiceDecorator;
 import com.lazan.tinyioc.ServiceModule;
 import com.lazan.tinyioc.ServiceRegistry;
 import com.lazan.tinyioc.UnorderedContributor;
 
 public class ServiceRegistryImpl implements ServiceRegistry {
+	private static ServiceModule DEFAULT_MODULE = new ServiceModule() {
+		@Override
+		public void bind(ServiceBinder binder) {
+			binder.bind(Autobuilder.class, new ServiceBuilder<Autobuilder>() {
+				@Override
+				public Autobuilder build(ServiceBuilderContext context) {
+					return new AutobuilderImpl();
+				}
+			});
+		}
+	};
 	private final Set<String> idStack;
 	private final Map<String, ServiceReference<?>> referencesById;
 	private final Map<Class<?>, List<ServiceReference<?>>> referencesByType;
@@ -27,6 +42,7 @@ public class ServiceRegistryImpl implements ServiceRegistry {
 		
 		ServiceBinderImpl binder = new ServiceBinderImpl();
 		
+		DEFAULT_MODULE.bind(binder);
 		for (ServiceModule module : modules) {
 			module.bind(binder);
 		}
