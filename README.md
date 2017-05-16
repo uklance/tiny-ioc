@@ -69,7 +69,12 @@ public class MyModule {
         binder.bind(Dependency1.class, Dependency1Impl.class);
         binder.bind(Dependency2.class, Dependency2Impl.class);
         binder.bind(Service1.class, Service1Impl.class);
-        binder.bind(Service2.class, Service2Impl.class);
+        binder.bind(Service2.class, Service2Impl.class).withServiceId("service2A");
+    }
+    
+    @Service(serviceId="service2B")
+    public Service2 service2B(Dependency1 dependency1, Dependency2 dependency2) {
+        return new Service2Impl(dependency1, dependency2);
     }
 }
 ```
@@ -89,9 +94,13 @@ public class MyMain {
         assert d1 == s1.getDependency1();
         assert d2 == s1.getDependency2();
 
-        Service2 s2 = registry.getService(Service2.class);        
-        assert d1 == s2.getDependency1();
-        assert d2 == s2.getDependency2();
+        Service2 s2A = registry.getService(Service2.class, "service2A");        
+        assert d1 == s2A.getDependency1();
+        assert d2 == s2A.getDependency2();
+        
+        Service2 s2B = registry.getService(Service2.class, "service2B");        
+        assert d1 == s2B.getDependency1();
+        assert d2 == s2B.getDependency2();
     }
 }
 ```
