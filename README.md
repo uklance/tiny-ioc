@@ -95,3 +95,50 @@ public class MyMain {
     }
 }
 ```
+
+## Overriding Services
+
+```java
+import com.lazan.tinyioc.annotations.*;
+public class MyModule1 {
+    @Bind
+    public void bind(ServiceBinder binder) {
+        binder.bind(String.class, "s1").withServiceId("string1");
+        binder.bind(String.class, "s2").withServiceId("string2");
+        binder.bind(Integer.class, 1);
+        binder.bind(Long.class, 2L);
+    }
+}
+```
+
+```java
+import com.lazan.tinyioc.annotations.*;
+public class MyModule2 {
+    @Bind
+    public void bind(ServiceBinder binder) {
+        binder.override(String.class, "s1-override").withServiceId("string1");
+        binder.override(Integer.class, 100);
+    }
+}
+```
+
+```java
+import com.lazan.tinyioc.*;
+public class MyMain {
+    public static void main(String[] args) {
+        ServiceRegistry registry = new ServiceRegistryBuilder()
+            .withModuleTypes(MyModule1.class, MyModule2.class)
+            .build();
+        
+        String s1 = registry.getService("string1", String.class);
+        String s2 = registry.getService("string2", String.class);
+        Integer i = registry.getService(Integer.class);
+        Long l = registry.getService(Long.class);
+        
+        assert s1.equals("s1-override");
+        assert s2.equals("s2");
+        assert i == 100;
+        assert l == 2L;
+    }
+}
+```
