@@ -116,8 +116,12 @@ import com.lazan.tinyioc.annotations.*;
 public class MyModule2 {
     @Bind
     public void bind(ServiceBinder binder) {
-        binder.override(String.class, "s1-override").withServiceId("string1");
         binder.override(Integer.class, 100);
+    }
+    
+    @Override(serviceId="string1")
+    public void string1Override() {
+        return "s1-override";
     }
 }
 ```
