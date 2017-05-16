@@ -2,7 +2,7 @@
 
 A lightweight IOC container with minimal dependencies inspired by [google-guice](https://github.com/google/guice) and [tapestry-ioc](https://tapestry.apache.org/ioc.html) 
 
-## Building and Registering Services With the IOC Container
+## Building and Registering Services with the IOC Container
 
 ```java
 import com.lazan.tinyioc.annotations.*;
@@ -62,6 +62,7 @@ public class Service2Impl implements Service2 {
 ```
 
 ```java
+import com.lazan.tinyioc.annotations.*;
 public class MyModule {
     @Bind
     public void bind(ServiceBinder binder) {
