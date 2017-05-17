@@ -158,7 +158,46 @@ public class MyMain {
 
 ## Decorating Services
 
-Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
+```java
+import com.lazan.tinyioc.annotations.*;
+public class MyModule {
+    @Bind
+    public void bind(ServiceBinder binder) {
+        ServiceDecorator<String> decorator =  new ServiceDecorator<String>() {
+            public String decorate(ServiceBuilderContext context, String delegate) {
+                return String.format("d1|%s|d1", delegate);
+            }
+        };
+        
+        binder.bind(String.class, "initial-value");
+        binder.decorate(String.class, "decorartor1", decorator).after("decorator2");
+    }
+    
+    @Decorate(decoratorId="decorartor2")
+    public String decorateString2(String delegate) {
+        return String.format("d2|%s|d2", delegate);
+    }
+    
+    @Decorate(decoratorId="decorartor3", before={ "decorator2", "decorator1" })
+    public String decorateString3(String delegate) {
+        return String.format("d3|%s|d3", delegate);
+    }
+}
+```
+
+```java
+import com.lazan.tinyioc.*;
+public class MyMain {
+    public static void main(String[] args) {
+        ServiceRegistry registry = new ServiceRegistryBuilder()
+            .withModuleType(MyModule.class)
+            .build();
+        
+        String string = registry.getService(String.class);
+        assert string.equals("d1|d2|d3|initial-value|d3|d2|d1");
+    }
+}
+```
 
 ## Service Contributions
 
