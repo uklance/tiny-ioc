@@ -260,23 +260,23 @@ public class AnnotatedServiceModuleTest {
 	public static class ContributeModule3 {
 		@Bind
 		public void bind(ServiceBinder binder) {
-			binder.bind(InjectMe.class);
+			binder.bind(ContributeMe.class);
 		}
-		@Contribute(serviceType=InjectMe.class)
+		@Contribute(serviceType=ContributeMe.class)
 		public void contribute1(OrderedConfiguration<String> config) {
 			config.add("c1", "a");
 		}
-		@Contribute(serviceType=InjectMe.class)
+		@Contribute(serviceType=ContributeMe.class)
 		public void contribute2(MappedConfiguration<String, Long> config) {
 			config.add("c1", "b", 2L);
 		}
-		@Contribute(serviceType=InjectMe.class)
+		@Contribute(serviceType=ContributeMe.class)
 		public void contribute3(UnorderedConfiguration<Integer> config) {
 			config.add("c1", 3);
 		}
 	}	
 	
-	public static class InjectMe {
+	public static class ContributeMe {
 		@Inject private List<String> list;
 		@Inject private Map<String, String> map;
 		@Inject private Collection<String> collection;
@@ -290,7 +290,7 @@ public class AnnotatedServiceModuleTest {
 	@Test
 	public void testContribute3() {
 		ServiceRegistry registry = buildRegistry(ContributeModule3.class);
-		String stringValue = registry.getService(InjectMe.class).toString();
+		String stringValue = registry.getService(ContributeMe.class).toString();
 		assertEquals("list=[a],map={b=2},collection=[3]", stringValue);
 	}
 	
@@ -315,6 +315,37 @@ public class AnnotatedServiceModuleTest {
 	public void testAutobuild() {
 		ServiceRegistry registry = buildRegistry(AutobuildModule.class);
 		assertEquals("xax", registry.getService("bar"));
+	}
+	
+	public static class InjectMe {
+		@Inject
+		private String string;
+	}
+	
+	public static class ExceptionModule {
+		@Bind
+		public void bind(ServiceBinder binder) {
+			binder.bind(InjectMe.class).eagerLoad();
+		}
+	}
+	
+	@Test
+	public void testExceptions() {
+		try {
+			buildRegistry(ExceptionModule.class);
+			fail();
+		} catch (Exception e) {
+			assertEquals("Error injecting field 'string' in serviceId 'injectMe'", e.getMessage());
+		}
+		
+		try {
+			ServiceRegistry emptyRegistry = buildRegistry(Object.class);
+			emptyRegistry.autobuild(InjectMe.class);
+			fail();
+		} catch (Exception e) {
+			String expected = String.format("Error injecting field 'string' in type '%s'", InjectMe.class.getName());
+			assertEquals(expected, e.getMessage());
+		}
 	}
 	
 	private ServiceRegistry buildRegistry(Class<?>... moduleTypes) {
