@@ -169,16 +169,16 @@ public class MyModule {
             }
         };
         
-        binder.bind(String.class, "initial-value");
-        binder.decorate(String.class, "decorartor1", decorator).after("decorator2");
+        binder.bind(String.class, "initial-value").withServiceId("foo");
+        binder.decorate(String.class, "decorartor1", decorator).withServiceId("foo").after("decorator2");
     }
     
-    @Decorate(decoratorId="decorartor2")
+    @Decorate(decoratorId="decorartor2", serviceId="foo")
     public String decorateString2(String delegate) {
         return String.format("d2|%s|d2", delegate);
     }
     
-    @Decorate(decoratorId="decorartor3", before={ "decorator2", "decorator1" })
+    @Decorate(decoratorId="decorartor3", serviceId="foo", before={ "decorator2", "decorator1" })
     public String decorateString3(String delegate) {
         return String.format("d3|%s|d3", delegate);
     }
@@ -193,7 +193,7 @@ public class MyMain {
             .withModuleType(MyModule.class)
             .build();
         
-        String string = registry.getService(String.class);
+        String string = registry.getService("foo", String.class);
         assert string.equals("d1|d2|d3|initial-value|d3|d2|d1");
     }
 }
